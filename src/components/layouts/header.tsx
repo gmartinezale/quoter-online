@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ArrowLeftOnRectangleIcon, Bars3Icon } from "@heroicons/react/24/solid";
 import { useFormState } from "react-dom";
 import { logout } from "@/lib/actions";
@@ -25,9 +26,7 @@ export default function Header({ setToggleOpen, toggleOpen }: IHeaderProps) {
               className="p-2 hidden sm:block rounded cursor-pointer focus:bg-gray-700 focus:ring-2 focus:ring-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white"
               onClick={toggleSidebar}
             >
-              <Bars3Icon
-                className="w-6 h-6 text-gray-300"
-              />
+              <Bars3Icon className="w-6 h-6 text-gray-300" />
             </button>
             <button
               id="toggleSidebarMobile"
@@ -54,7 +53,7 @@ export default function Header({ setToggleOpen, toggleOpen }: IHeaderProps) {
                     aria-expanded="false"
                     data-dropdown-toggle="dropdown-2"
                     onClick={() => {
-                      setTimeout(() => window.location.reload(), 1000)
+                      setTimeout(() => window.location.reload(), 1000);
                     }}
                   >
                     <ArrowLeftOnRectangleIcon className="w-5 h-5 text-gray-300" />

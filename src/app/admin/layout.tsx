@@ -16,7 +16,11 @@ export default function AdminLayout({ children }: Props) {
       <div className="flex pt-16 overflow-hidden bg-gray-900">
         <Sidebar toggleOpen={toggleOpen} />
       </div>
-      <div className={`relative w-full h-full overflow-y-auto ${toggleOpen ? 'lg:ml-64' : 'lg:ml-16'} bg-gray-900`}>
+      <div
+        className={`relative w-full h-full overflow-y-auto ${
+          toggleOpen ? "lg:ml-64" : "lg:ml-16"
+        } bg-gray-900`}
+      >
         {children}
       </div>
     </>

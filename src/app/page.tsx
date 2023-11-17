@@ -1,27 +1,13 @@
-import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  const { data: session, status } = useSession();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+export default async function Home() {
+  const session = await auth();
   if (session) {
-    window.location.href = "/admin";
+    redirect("/admin");
   } else {
-    window.location.href = "/login";
+    redirect("/login");
   }
 
-  return (
-    <div>
-      {loading && <p>Loading...</p>}
-      {!loading && session && <p>Hola de nuevo!</p>}
-    </div>
-  );
+  return <></>;
 }

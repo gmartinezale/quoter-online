@@ -1,5 +1,6 @@
 import { ChartPieIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface ISidebarProps {
   toggleOpen?: boolean;
@@ -7,13 +8,14 @@ interface ISidebarProps {
 
 const naviItems = [
   {
-    'icon': <ChartPieIcon className="w-6 h-6 text-gray-300" />,
-    'name': 'Dashboard',
-    'url': '/admin/',
-  }
+    icon: <ChartPieIcon className="w-6 h-6 text-gray-300" />,
+    name: "Dashboard",
+    url: "/admin",
+  },
 ];
 
 export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
+  const path = usePathname();
   return (
     <>
       <aside
@@ -27,20 +29,19 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
           <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
             <div className="flex-1 px-3 space-y-1 bg-gray-800 divide-gray-700">
               <ul className="pb-2 space-y-2">
-                {
-                  naviItems.map((item, index) => (
-                    <li key={index}>
-                      <Link href={item.url} className="flex items-center p-2 text-base rounded-lg group text-gray-200 hover:bg-gray-700">
-                        {item.icon}
-                        {toggleOpen && (
-                          <span className="ml-3">
-                            {item.name}
-                          </span>
-                        )}
-                      </Link>
-                    </li>
-                  ))
-                }
+                {naviItems.map((item, index) => (
+                  <li key={index}>
+                    <Link
+                      href={item.url}
+                      className={`flex items-center p-2 text-base rounded-lg group text-gray-200 hover:bg-gray-700 ${
+                        item.url === path ? "bg-gray-700" : ""
+                      }`}
+                    >
+                      {item.icon}
+                      {toggleOpen && <span className="ml-3">{item.name}</span>}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
