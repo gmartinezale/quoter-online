@@ -1,7 +1,7 @@
 // generate a component use react-hook-form
 import { CategoryRepository } from "@/data/categories.repository";
 import { Button, Spinner, TextInput } from "flowbite-react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 
@@ -17,6 +17,7 @@ export function FormCategory({
   id,
 }: IFormCategoryProps) {
   const { showToast } = useContext(ToastContext);
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const { control, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
       id: "",
@@ -27,11 +28,12 @@ export function FormCategory({
 
   useEffect(() => {
     reset();
+    emailInputRef.current?.focus();
     setValue("name", name || "");
     if (id) {
       setValue("id", id || "");
     }
-  }, [name, id]);
+  }, [name, id, reset, setValue]);
 
   const saveCategory = async (data: any) => {
     try {
@@ -72,7 +74,9 @@ export function FormCategory({
               className="w-full pb-2 rounded"
               placeholder="Ingrese nombre de la categoría"
               color="gray"
+              ref={emailInputRef}
               onChange={(e) => field.onChange(e.target.value)}
+              required
             />
           )}
         />

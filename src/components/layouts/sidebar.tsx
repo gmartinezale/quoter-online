@@ -29,6 +29,10 @@ const naviItems = [
         name: "Categoría",
         url: "/admin/categories",
       },
+      {
+        name: "Productos",
+        url: "/admin/products",
+      },
     ],
   },
 ];

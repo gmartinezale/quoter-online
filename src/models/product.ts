@@ -1,4 +1,6 @@
+import { Category } from "@/entities/Category";
 import { Document, Schema, model } from "mongoose";
+import "./category";
 
 interface IPrice {
   description: string;
@@ -9,6 +11,7 @@ interface IProduct extends Document {
   name: string;
   prices: IPrice[];
   active: boolean;
+  category: string | Category;
 }
 
 const ProductSchema = new Schema<IProduct>(
@@ -21,6 +24,7 @@ const ProductSchema = new Schema<IProduct>(
         price: Number,
       },
     ],
+    category: { type: Schema.Types.ObjectId, ref: "Category" },
   },
   { timestamps: true },
 );

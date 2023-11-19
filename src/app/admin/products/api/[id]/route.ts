@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/mongo";
-import Category from "@/models/category";
+import Product from "@/models/product";
 
 export async function DELETE(
   request: Request,
@@ -8,18 +8,18 @@ export async function DELETE(
   try {
     await connectDB();
     const { id } = context.params;
-    const category = await Category.findOneAndUpdate(
+    const product = await Product.findOneAndUpdate(
       { _id: id },
       { active: false },
     );
-    if (!category) {
+    if (!product) {
       return new Response(JSON.stringify({ success: false }), {
         status: 500,
       });
     }
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Error deleting category: ", error);
+    console.error("Error deleting product: ", error);
     return new Response(JSON.stringify({ success: false }), {
       status: 500,
     });
