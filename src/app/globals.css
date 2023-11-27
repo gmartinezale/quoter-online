@@ -16,6 +16,10 @@
   }
 } */
 
+.MuiInputBase-input {
+  background-color: #1d1d1d;
+}
+
 .auth-main {
   background-color: #121212;
 }

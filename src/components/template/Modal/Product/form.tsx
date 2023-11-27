@@ -4,16 +4,15 @@ import { Button, Select, Spinner, TextInput } from "flowbite-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
-import { Price } from "@/entities/Product";
 import { CategoryRepository } from "@/data/categories.repository";
 import { Category } from "@/entities/Category";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { TypeRepository } from "@/data/types.repository";
 
 interface IFormProductProps {
   closeProductFormModal: (update: boolean) => void;
   name?: string;
   id?: string;
-  prices?: Price[];
   category?: string;
 }
 
@@ -21,7 +20,6 @@ export function FormProduct({
   closeProductFormModal,
   name,
   id,
-  prices,
   category,
 }: IFormProductProps) {
   const { showToast } = useContext(ToastContext);
@@ -31,13 +29,13 @@ export function FormProduct({
       id: "",
       name: "",
       category: "",
-      prices: prices || [{ description: "", price: 0 }],
+      types: [{ _id: "", description: "", price: 0, stock: 0 }],
     },
     shouldUnregister: false,
   });
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "prices",
+    name: "types",
   });
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,8 +52,23 @@ export function FormProduct({
     }
   };
 
+  const getTypes = async (productId: string) => {
+    try {
+      const repository = TypeRepository.instance();
+      const { types } = await repository.getTypesByProduct(productId);
+      console.log("types", types);
+      setValue("types", types);
+    } catch (error) {
+      console.error("Error get types: ", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     getCategories().then(() => setIsLoading(false));
+    if (id && id !== "") {
+      getTypes(id);
+    }
   }, []);
 
   useEffect(() => {
@@ -63,7 +76,7 @@ export function FormProduct({
     emailInputRef.current?.focus();
     setValue("name", name || "");
     setValue("category", category || "");
-    if (id) {
+    if (id && id !== "") {
       setValue("id", id || "");
     }
   }, [name, id, category, reset, setValue]);
@@ -130,9 +143,9 @@ export function FormProduct({
           <Controller
             name="category"
             control={control}
-            defaultValue={category}
             render={({ field }) => (
               <Select
+                value={field.value || ""}
                 className="w-full pb-2 rounded"
                 placeholder="Seleccione una categoría"
                 onChange={(e) => field.onChange(e.target.value)}
@@ -156,63 +169,81 @@ export function FormProduct({
           <div className="block my-2">
             <div className="mb-2 text-white flex items-center">
               <h2 className="">
-                Precios:
+                Tipos:
                 <button
                   type="button"
                   className="ml-2 p-1 rounded-full bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  onClick={() => append({ description: "", price: 0 })}
+                  onClick={() =>
+                    append({ _id: "", description: "", price: 0, stock: 0 })
+                  }
                 >
                   <PlusIcon className="h-5 w-5" />
                 </button>
               </h2>
             </div>
-            <div className="pl-4 flex flex-col text-white">
-              {fields.map((item, index) => (
-                <>
-                  <div key={index} className="flex space-x-2 items-center">
-                    <label className="w-24">Descripción:</label>
-                    <Controller
-                      name={`prices.${index}.description`}
-                      control={control}
-                      defaultValue={item.description}
-                      render={({ field }) => (
-                        <TextInput
-                          value={field.value || ""}
-                          type="text"
-                          className="w-1/2 pb-2 rounded"
-                          placeholder="Ingrese descripción del precio"
-                          onChange={(e) => field.onChange(e.target.value)}
-                          required
-                        />
-                      )}
-                    />
-                    <label className="pl-2 w-24">Precio:</label>
-                    <Controller
-                      name={`prices.${index}.price`}
-                      control={control}
-                      defaultValue={item.price}
-                      render={({ field }) => (
-                        <TextInput
-                          value={field.value || ""}
-                          type="number"
-                          className="w-1/2 pb-2 rounded"
-                          placeholder="Ingrese el precio"
-                          onChange={(e) => field.onChange(e.target.value)}
-                          required
-                        />
-                      )}
-                    />
-                    <button
-                      type="button"
-                      className="ml-2 p-1 mb-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      onClick={() => remove(index)}
-                    >
-                      <MinusIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </>
-              ))}
-            </div>
+            {fields.map((item, index) => (
+              <div
+                key={`${item._id}-${index}`}
+                className="pl-4 flex flex-col text-white"
+              >
+                <div className="flex space-x-3 items-center">
+                  <label className="w-24">Descripción:</label>
+                  <Controller
+                    name={`types.${index}.description`}
+                    control={control}
+                    defaultValue={item.description}
+                    render={({ field }) => (
+                      <TextInput
+                        value={field.value || ""}
+                        type="text"
+                        className="w-1/2 pb-2 rounded"
+                        placeholder="Ingrese descripción del precio"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        required
+                      />
+                    )}
+                  />
+                  <label className="w-24">Stock:</label>
+                  <Controller
+                    name={`types.${index}.stock`}
+                    control={control}
+                    defaultValue={item.stock}
+                    render={({ field }) => (
+                      <TextInput
+                        value={field.value || ""}
+                        type="number"
+                        className="w-1/2 pb-2 rounded"
+                        placeholder="Ingrese Stock"
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    )}
+                  />
+                  <label className="pl-2 w-24">Precio:</label>
+                  <Controller
+                    name={`types.${index}.price`}
+                    control={control}
+                    defaultValue={item.price}
+                    render={({ field }) => (
+                      <TextInput
+                        value={field.value || ""}
+                        type="number"
+                        className="w-1/2 pb-2 rounded"
+                        placeholder="Ingrese el precio"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        required
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="ml-2 p-1 mb-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    onClick={() => remove(index)}
+                  >
+                    <MinusIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         <Button type="submit" disabled={isSaving}>

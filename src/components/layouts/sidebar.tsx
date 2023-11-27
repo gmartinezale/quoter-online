@@ -3,6 +3,7 @@ import {
   ChartPieIcon,
   WrenchScrewdriverIcon,
   ChevronDownIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +20,11 @@ const naviItems = [
     url: "/admin",
   },
   {
+    icon: <ClipboardDocumentCheckIcon className="w-6 h-6 text-gray-400" />,
+    name: "Cotizador",
+    url: "/admin/quoter",
+  },
+  {
     icon: <WrenchScrewdriverIcon className="w-6 h-6 text-gray-400" />,
     name: "Mantenedores",
     url: "#",
@@ -32,6 +38,10 @@ const naviItems = [
       {
         name: "Productos",
         url: "/admin/products",
+      },
+      {
+        name: "Stock",
+        url: "/admin/types",
       },
     ],
   },

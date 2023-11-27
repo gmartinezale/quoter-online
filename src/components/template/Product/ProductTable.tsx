@@ -1,7 +1,7 @@
 "use client";
-import { Price, Product } from "@/entities/Product";
+import { Product } from "@/entities/Product";
 import { useContext, useEffect, useState } from "react";
-import { Button, Modal } from "flowbite-react";
+import { Button, Modal, Spinner } from "flowbite-react";
 import Table from "@/components/elements/Table/Table";
 import { MRT_ColumnDef } from "material-react-table";
 import {
@@ -17,6 +17,8 @@ import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Category } from "@/entities/Category";
 import formatCurrency from "@/utils/formatCurrency";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { TypeRepository } from "@/data/types.repository";
+import { Type } from "@/entities/Type";
 
 interface IProductTableProps {
   initialProducts: Product[];
@@ -68,7 +70,6 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
             closeProductFormModal={closeProductFormModal}
             id={product._id}
             name={product.name}
-            prices={product.prices}
             category={categoryId}
           />
         ),
@@ -99,26 +100,46 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
     }
   };
 
-  const showModalPrices = (prices: Price[]) => {
-    setShowModal(true);
-    setModalData({
-      title: "Precios",
-      size: "2xl",
-      content: (
-        <div className="flex flex-col text-white">
-          {prices.map((price, index) => (
-            <div key={index} className="flex space-x-2">
-              <div className="flex-1">
-                <h4>{price.description}</h4>
-              </div>
-              <div className="flex-1 text-white">
-                {formatCurrency(price.price)}
-              </div>
+  const showModalPrices = async (productId: string) => {
+    try {
+      const typeRepository = TypeRepository.instance();
+      const { types } = await typeRepository.getTypesByProduct(productId);
+      setShowModal(true);
+      setModalData({
+        title: "Tipos",
+        size: "2xl",
+        content: (
+          <div className="flex flex-col text-white">
+            Espere un momento.... <Spinner />
+          </div>
+        ),
+      });
+      if (types.length === 0) {
+        showToast(false, "No existen precios para este producto");
+      } else {
+        setModalData({
+          title: "Tipos",
+          size: "2xl",
+          content: (
+            <div className="flex flex-col text-white">
+              {(types as Type[]).map((type, index) => (
+                <div key={index} className="flex space-x-2">
+                  <div className="flex-1">
+                    <h4>{type.description}</h4>
+                  </div>
+                  <div className="flex-1 text-white">
+                    {formatCurrency(type.price)}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ),
-    });
+          ),
+        });
+      }
+    } catch (error) {
+      console.error("Error get types: ", error);
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -133,14 +154,14 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
       accessorKey: "name",
     },
     {
-      header: "Precios",
-      accessorKey: "prices",
+      header: "Tipos",
+      accessorKey: "_id",
       Cell: (row) => {
-        const prices = row.cell.getValue<Price[]>();
+        const id = row.cell.getValue<string>();
         return (
           <MagnifyingGlassIcon
             className="w-5 h-5 text-white cursor-pointer"
-            onClick={() => showModalPrices(prices)}
+            onClick={() => showModalPrices(id)}
           />
         );
       },
@@ -148,6 +169,10 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
     {
       header: "Categoría",
       accessorKey: "category",
+      filterFn: (row, id, filterValue) => {
+        const category = row.original.category as Category;
+        return category?.name.toLowerCase().includes(filterValue.toLowerCase());
+      },
       Cell: (row) => {
         const category = row.cell.getValue<Category>();
         return category?.name;

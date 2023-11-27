@@ -1,9 +1,9 @@
-import CategoryTable from "@/components/template/Category/CategoryTable";
+import CreateQuoter from "@/components/template/Quoter/Create";
 import { Category } from "@/entities/Category";
 import { CategoryRepository } from "@/data/categories.repository";
 import { cookies } from "next/headers";
-import SkeletonLoading from "@/components/layouts/loading";
 import { Suspense } from "react";
+import SkeletonLoading from "@/components/layouts/loading";
 
 const getCategories = async () => {
   try {
@@ -22,7 +22,7 @@ export default async function CategoryPage() {
   const categories: Category[] = await getCategories();
   return (
     <Suspense fallback={<SkeletonLoading />}>
-      <CategoryTable initialCategories={categories} />
+      <CreateQuoter initialCategories={categories} />
     </Suspense>
   );
 }
