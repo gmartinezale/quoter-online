@@ -4,7 +4,6 @@ import { useContext, useEffect, useState } from "react";
 import Table from "@/components/elements/Table/Table";
 import { MRT_ColumnDef } from "material-react-table";
 import { XMarkIcon } from "@heroicons/react/24/solid";
-import { ProductRepository } from "@/data/products.repository";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Category } from "@/entities/Category";
 import formatCurrency from "@/utils/formatCurrency";
@@ -34,23 +33,6 @@ const TypeTable = ({ initialTypes }: ITypeTable) => {
       throw error;
     } finally {
       setUpdateData(false);
-      setIsLoading(false);
-    }
-  };
-
-  const deleteProduct = async (id?: string) => {
-    if (!id) return;
-    try {
-      setIsLoading(true);
-      const repository = ProductRepository.instance();
-      await repository.deleteProduct(id);
-      showToast(true, "Producto eliminada");
-    } catch (error) {
-      console.error("Error delete product: ", error);
-      showToast(false, "Ocurrío un error al eliminar el producto");
-      throw error;
-    } finally {
-      setUpdateData(true);
       setIsLoading(false);
     }
   };
