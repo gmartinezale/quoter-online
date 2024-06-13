@@ -1,7 +1,7 @@
 "use client";
 import { Category } from "@/entities/Category";
 import { useContext, useEffect, useState } from "react";
-import { Button, Modal } from "flowbite-react";
+import { Button, Modal, Spinner, Tooltip } from "flowbite-react";
 import Table from "@/components/elements/Table/Table";
 import { MRT_ColumnDef } from "material-react-table";
 import {
@@ -14,6 +14,9 @@ import Link from "next/link";
 import { ModalData } from "@/types";
 import { FormCategory } from "../Modal/Category/form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
+import { DocumentPlusIcon } from "@heroicons/react/24/outline";
+import { ProductRepository } from "@/data/products.repository";
+import ProductTable from "../Product/ProductTable";
 
 interface ICategoryTableProps {
   initialCategories: Category[];
@@ -76,6 +79,36 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
     }
   };
 
+  const openTypeProductModal = async (category: Category) => {
+    try {
+      setShowModal(true);
+      // set loading content
+      setModalData({
+        title: "Tipos de producto",
+        size: "3xl",
+        content: (
+          <div className="flex justify-center">
+            <Spinner />
+          </div>
+        ),
+      });
+      const typeRepository = ProductRepository.instance();
+      const categoryId: string = category._id ?? "";
+      const { products } =
+        await typeRepository.getProductsByCategory(categoryId);
+      setModalData({
+        title: `Tipos de producto de ${category.name}`,
+        size: "7xl",
+        content: (
+          <ProductTable initialProducts={products} categoryId={categoryId} />
+        ),
+      });
+    } catch (error) {
+      console.error("Error open type product modal: ", error);
+      throw error;
+    }
+  };
+
   const deleteCategory = async (id?: string) => {
     if (!id) return;
     try {
@@ -112,6 +145,14 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
         const category = row.row.original as Category;
         return (
           <div className="flex space-x-2">
+            <Tooltip content="Agregar Tipos" style="light">
+              <button
+                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                onClick={() => openTypeProductModal(category)}
+              >
+                <DocumentPlusIcon className="w-4 h-4 text-white" />
+              </button>
+            </Tooltip>
             <button
               className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               onClick={() => openCategoryModal(category)}
@@ -132,7 +173,7 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-xl text-white font-semibold">Categorías</h1>
+      <h1 className="text-xl text-white font-semibold">Productos</h1>
       <div className="flex flex-col mt-6 bg-gray-800 border-gray-700 rounded-lg">
         <div className="justify-between px-4 py-3">
           <div className="w-full pb-2 flex justify-end">

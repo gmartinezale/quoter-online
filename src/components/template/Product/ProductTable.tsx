@@ -22,9 +22,10 @@ import { Type } from "@/entities/Type";
 
 interface IProductTableProps {
   initialProducts: Product[];
+  categoryId?: string;
 }
 
-const ProductTable = ({ initialProducts }: IProductTableProps) => {
+const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
   const { showToast } = useContext(ToastContext);
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [updateData, setUpdateData] = useState<boolean>(false);
@@ -39,8 +40,13 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
     try {
       setIsLoading(true);
       const repository = ProductRepository.instance();
-      const { products } = await repository.getProducts();
-      setProducts(products);
+      if (categoryId) {
+        const { products } = await repository.getProductsByCategory(categoryId);
+        setProducts(products);
+      } else {
+        const { products } = await repository.getProducts();
+        setProducts(products);
+      }
     } catch (error) {
       console.error("Error get products: ", error);
       throw error;
@@ -60,17 +66,20 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
 
   const openProductModal = (product?: Product) => {
     setShowModal(true);
-    if (product) {
-      const categoryId = product.category._id;
+    if (product || categoryId) {
+      let productCategoryId = categoryId;
+      if (!productCategoryId) {
+        productCategoryId = product?.category._id;
+      }
       setModalData({
         title: "Editar producto",
         size: "3xl",
         content: (
           <FormProduct
             closeProductFormModal={closeProductFormModal}
-            id={product._id}
-            name={product.name}
-            category={categoryId}
+            id={product?._id}
+            name={product?.name}
+            category={productCategoryId}
           />
         ),
       });
@@ -205,9 +214,11 @@ const ProductTable = ({ initialProducts }: IProductTableProps) => {
   ];
 
   return (
-    <div className="px-4 pt-6 dark">
-      <h1 className="text-xl text-white font-semibold">Productos</h1>
-      <div className="flex flex-col mt-6 bg-gray-800 border-gray-700 rounded-lg">
+    <div className="px-4 pt-2 dark">
+      {!categoryId && (
+        <h1 className="text-xl text-white font-semibold">Productos</h1>
+      )}
+      <div className="flex flex-col">
         <div className="justify-between px-4 py-3">
           <div className="w-full pb-2 flex justify-end">
             <Button onClick={() => openProductModal()}>Agregar</Button>

@@ -137,35 +137,39 @@ export function FormProduct({
           />
         </div>
         <div className="block mb-2">
-          <div className="mb-2 block text-white">
-            <label htmlFor="category">Categoría</label>
-          </div>
-          <Controller
-            name="category"
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value || ""}
-                className="w-full pb-2 rounded"
-                placeholder="Seleccione una categoría"
-                onChange={(e) => field.onChange(e.target.value)}
-                required
-              >
-                <option value="" disabled selected={!category}>
-                  Seleccione una categoría
-                </option>
-                {categories.map((categoryItem) => (
-                  <option
-                    key={categoryItem._id}
-                    value={categoryItem._id}
-                    selected={categoryItem._id === category ? true : false}
+          {!category && (
+            <>
+              <div className="mb-2 block text-white">
+                <label htmlFor="category">Categoría</label>
+              </div>
+              <Controller
+                name="category"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || ""}
+                    className="w-full pb-2 rounded"
+                    placeholder="Seleccione una categoría"
+                    onChange={(e) => field.onChange(e.target.value)}
+                    required
                   >
-                    {categoryItem.name}
-                  </option>
-                ))}
-              </Select>
-            )}
-          />
+                    <option value="" disabled selected={!category}>
+                      Seleccione una categoría
+                    </option>
+                    {categories.map((categoryItem) => (
+                      <option
+                        key={categoryItem._id}
+                        value={categoryItem._id}
+                        selected={categoryItem._id === category ? true : false}
+                      >
+                        {categoryItem.name}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              />
+            </>
+          )}
           <div className="block my-2">
             <div className="mb-2 text-white flex items-center">
               <h2 className="">

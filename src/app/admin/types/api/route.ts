@@ -1,10 +1,18 @@
 import { connectDB } from "@/lib/mongo";
 import Type from "@/models/type";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const query = new URL(request.url).searchParams;
+    const seacrhObject: any = {
+      active: true,
+    };
+    if (query.get("productId")) {
+      const productId = query.get("productId")?.toString();
+      seacrhObject["product"] = productId;
+    }
     await connectDB();
-    const types = await Type.find({ active: true })
+    const types = await Type.find(seacrhObject)
       .populate("category product")
       .lean();
     if (!types) {

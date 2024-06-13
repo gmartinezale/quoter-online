@@ -29,4 +29,8 @@ export class ProductRepository {
   deleteProduct(id: string) {
     return this._service.delete(`/admin/products/api/${id}`, { id });
   }
+
+  getProductsByCategory(categoryId: string) {
+    return this._service.get(`/admin/products/api/category/${categoryId}`);
+  }
 }

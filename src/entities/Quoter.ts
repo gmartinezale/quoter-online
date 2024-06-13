@@ -1,11 +1,19 @@
-import { Product } from "./Product";
+import { Type } from "./Type";
+
+export type ExtraProductQuoter = {
+  description: string;
+  price: number;
+  amount: number;
+};
 
 export type ProductsQuoter = {
-  product: Product;
+  type: string | Type;
   amount: number;
   price: number;
   description: string;
   isFinished: boolean;
+  category: string;
+  extras: ExtraProductQuoter[];
 };
 
 export type Quoter = {

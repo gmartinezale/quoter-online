@@ -1,9 +1,10 @@
-import { Product } from "@/entities/Product";
 import { Document, Schema, model } from "mongoose";
 import "./product";
+import "./type";
+import { Type } from "@/entities/Type";
 
 interface IProductsQuoter {
-  product: string | Product;
+  product: string | Type;
   amount: number;
   price: number;
   description: string;
@@ -27,7 +28,7 @@ const QuoterSchema = new Schema<IQuoter>(
     active: Boolean,
     products: [
       {
-        product: { type: Schema.Types.ObjectId, ref: "Product" },
+        type: { type: Schema.Types.ObjectId, ref: "Type" },
         amount: Number,
         price: Number,
         description: String,

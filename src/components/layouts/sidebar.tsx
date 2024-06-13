@@ -32,12 +32,8 @@ const naviItems = [
     showChildren: false,
     children: [
       {
-        name: "Categoría",
-        url: "/admin/categories",
-      },
-      {
         name: "Productos",
-        url: "/admin/products",
+        url: "/admin/categories",
       },
       {
         name: "Stock",
