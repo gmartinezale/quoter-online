@@ -166,7 +166,7 @@ const TypeTable = ({ initialTypes }: ITypeTable) => {
   ];
 
   return (
-    <div className="px-4 pt-6 dark">
+    <div className="px-4 pt-6">
       <h1 className="text-xl text-white font-semibold">Stock</h1>
       <div className="flex flex-col mt-6 bg-gray-800 border-gray-700 rounded-lg">
         <div className="justify-between px-4 py-3">

@@ -1,14 +1,24 @@
 import { Document, Schema, model } from "mongoose";
 import "./product";
 import "./type";
+import "./category";
 import { Type } from "@/entities/Type";
+import { Product } from "@/entities/Product";
+import { Category } from "@/entities/Category";
 
+interface IExtraProductQuoter {
+  description: string;
+  price: number;
+  amount: number;
+}
 interface IProductsQuoter {
-  product: string | Type;
+  type: string | Product;
   amount: number;
   price: number;
-  description: string;
+  description: string | Type;
   isFinished: boolean;
+  category: string | Category;
+  extras: IExtraProductQuoter[];
 }
 
 interface IQuoter extends Document {
@@ -28,11 +38,21 @@ const QuoterSchema = new Schema<IQuoter>(
     active: Boolean,
     products: [
       {
-        type: { type: Schema.Types.ObjectId, ref: "Type" },
+        _id: false,
+        type: { type: Schema.Types.ObjectId, ref: "Product" },
         amount: Number,
         price: Number,
-        description: String,
+        description: { type: Schema.Types.ObjectId, ref: "Type" },
+        category: { type: Schema.Types.ObjectId, ref: "Category" },
         isFinished: { type: Boolean, default: false },
+        extras: [
+          {
+            _id: false,
+            description: String,
+            price: Number,
+            amount: Number,
+          },
+        ],
       },
     ],
     dateLimit: Date,

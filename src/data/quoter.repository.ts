@@ -17,4 +17,8 @@ export class QuoterRepository {
   saveQuoter(body: any) {
     return this._service.post("/admin/quoter/api", body);
   }
+
+  getQuoters(query?: any) {
+    return this._service.get("/admin/quoter/api", query?.options);
+  }
 }

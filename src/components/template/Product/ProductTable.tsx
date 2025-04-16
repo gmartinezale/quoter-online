@@ -214,7 +214,7 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
   ];
 
   return (
-    <div className="px-4 pt-2 dark">
+    <div className="px-4 pt-2">
       {!categoryId && (
         <h1 className="text-xl text-white font-semibold">Productos</h1>
       )}
@@ -237,7 +237,6 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
           setShowModal(false);
           setModalData({ ...modalData, content: null });
         }}
-        className="dark"
       >
         <Modal.Header>
           {modalData.title ?? ""}

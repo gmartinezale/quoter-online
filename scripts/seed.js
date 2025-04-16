@@ -3,13 +3,13 @@ const User = require('./models/user');
 
 async function seedDB() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/your-db', { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect('mongodb+srv://quotes-user-db:HSvnZa3G3Vi7txcA@quotes-prod.j7vgvbg.mongodb.net/quotes-prod', { useNewUrlParser: true, useUnifiedTopology: true });
 
     const defaultUser = new User({
       // replace these values with the default user data
-      name: 'Admin',
-      email: 'admin@test.com',
-      password: 'passwordAdmin',
+      name: 'Alexis',
+      email: 'gmartinez.alexis@gmail.com',
+      password: 'devricas',
     });
 
     await defaultUser.save();
