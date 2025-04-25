@@ -1,4 +1,6 @@
-import { Type } from "./Type";
+import { CategoryDoc } from "./Category";
+import { ProductDoc } from "./Product";
+import { TypeDoc } from "./Type";
 
 export type ExtraProductQuoter = {
   description: string;
@@ -7,12 +9,12 @@ export type ExtraProductQuoter = {
 };
 
 export type ProductsQuoter = {
-  type: string | Type;
+  type: string | ProductDoc;
   amount: number;
   price: number;
-  description: string;
+  description: string | TypeDoc;
   isFinished: boolean;
-  category: string;
+  category: string | CategoryDoc;
   extras: ExtraProductQuoter[];
 };
 

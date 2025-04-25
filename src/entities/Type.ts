@@ -12,3 +12,8 @@ export type Type = {
   category: Category;
   product: Product;
 };
+
+export type TypeDoc = {
+  _id: string;
+  description: string;
+};

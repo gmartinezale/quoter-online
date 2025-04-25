@@ -1,18 +1,145 @@
 import { connectDB } from "@/lib/mongo";
 import Quoter from "@/models/quoter";
+import { PipelineStage } from "mongoose";
 import { z } from "zod";
+
+function basePopulateQuoter(pipeline: PipelineStage[]) {
+  // Lookup para productos
+  pipeline.push({
+    $lookup: {
+      from: "products",
+      localField: "products.type",
+      foreignField: "_id",
+      as: "productDetails",
+      pipeline: [
+        {
+          $project: {
+            name: 1,
+          },
+        },
+      ],
+    },
+  });
+
+  // Lookup para tipos
+  pipeline.push({
+    $lookup: {
+      from: "types",
+      localField: "products.description",
+      foreignField: "_id",
+      as: "typeDetails",
+      pipeline: [
+        {
+          $project: {
+            description: 1,
+          },
+        },
+      ],
+    },
+  });
+
+  // Lookup para categorías
+  pipeline.push({
+    $lookup: {
+      from: "categories",
+      localField: "products.category",
+      foreignField: "_id",
+      as: "categoryDetails",
+      pipeline: [
+        {
+          $project: {
+            name: 1,
+          },
+        },
+      ],
+    },
+  });
+
+  // Proyectar los campos necesarios con los detalles
+  pipeline.push({
+    $project: {
+      totalAmount: 1,
+      artist: 1,
+      active: 1,
+      dateLimit: 1,
+      fileSended: 1,
+      status: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      products: {
+        $map: {
+          input: "$products",
+          as: "product",
+          in: {
+            _id: "$$product._id",
+            amount: "$$product.amount",
+            price: "$$product.price",
+            isFinished: "$$product.isFinished",
+            extras: "$$product.extras",
+            type: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: "$productDetails",
+                    as: "pd",
+                    cond: { $eq: ["$$pd._id", "$$product.type"] },
+                  },
+                },
+                0,
+              ],
+            },
+            description: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: "$typeDetails",
+                    as: "td",
+                    cond: { $eq: ["$$td._id", "$$product.description"] },
+                  },
+                },
+                0,
+              ],
+            },
+            category: {
+              $arrayElemAt: [
+                {
+                  $filter: {
+                    input: "$categoryDetails",
+                    as: "cd",
+                    cond: { $eq: ["$$cd._id", "$$product.category"] },
+                  },
+                },
+                0,
+              ],
+            },
+          },
+        },
+      },
+    },
+  });
+}
 
 export async function GET() {
   try {
     await connectDB();
-    const quoters = await Quoter.find({
-      status: { $nin: ["FINALIZADO", "ANULADO"] },
-    }).lean();
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          status: { $nin: ["FINALIZADO", "ANULADO"] },
+        },
+      },
+    ];
+
+    basePopulateQuoter(pipeline);
+
+    const quoters = await Quoter.aggregate(pipeline);
+
     if (!quoters) {
       return new Response(JSON.stringify({ success: false }), {
         status: 500,
       });
     }
+
     const quotersPending = quoters.filter(
       (quoter: any) => quoter.status === "PENDIENTE",
     );

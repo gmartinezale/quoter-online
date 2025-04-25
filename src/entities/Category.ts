@@ -5,3 +5,8 @@ export type Category = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type CategoryDoc = {
+  _id: string;
+  name: string;
+};

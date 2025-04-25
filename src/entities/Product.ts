@@ -14,3 +14,8 @@ export type Product = {
   updatedAt: Date;
   category: Category;
 };
+
+export type ProductDoc = {
+  _id: string;
+  name: string;
+};

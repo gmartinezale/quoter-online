@@ -1,19 +1,42 @@
+"use client";
 import { Quoter } from "@/entities/Quoter";
 import formatCurrency from "@/utils/formatCurrency";
 import { Button } from "@heroui/react";
-import { EyeIcon, ClockIcon } from "@heroicons/react/24/outline";
+import {
+  EyeIcon,
+  ClockIcon,
+  ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/24/outline";
 import Link from "next/link";
+import { Modal } from "flowbite-react";
+import { useState } from "react";
+import { ModalData } from "@/types";
+import ModalDetailQuoter from "./ModalDetailQuoter";
 
 interface ICardQuotersProps {
   quoter: Quoter;
 }
 
 export default function CardQuoters({ quoter }: ICardQuotersProps) {
+  const [modalData, setModalData] = useState<ModalData>({
+    title: "Producto",
+    size: "md",
+  });
+  const [showModal, setShowModal] = useState(false);
   const formattedDate = new Date(quoter.dateLimit).toLocaleDateString("es-ES", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  const showDetailQuoter = (quoter: Quoter) => {
+    setShowModal(true);
+    setModalData({
+      title: "Detalles de la cotización",
+      size: "3xl",
+      content: <ModalDetailQuoter quoter={quoter} />,
+    });
+  };
 
   return (
     <div className="flex p-6 rounded-lg bg-gray-800 border border-gray-700 w-full transition-all hover:bg-gray-700">
@@ -48,17 +71,44 @@ export default function CardQuoters({ quoter }: ICardQuotersProps) {
               </span>
             )}
           </div>
-          <Link href={`/admin/quoter/${quoter._id}`}>
-            <Button
-              variant="bordered"
-              className="inline-flex items-center space-x-2 text-white hover:text-gray-200"
-            >
-              <EyeIcon className="w-4 h-4" />
-              <span>Ver detalles</span>
-            </Button>
-          </Link>
+          <Button
+            variant="bordered"
+            className="inline-flex items-center space-x-2 text-white hover:text-gray-200"
+            onPress={() => showDetailQuoter(quoter)}
+          >
+            <EyeIcon className="w-4 h-4" />
+            <span>Ver detalles</span>
+          </Button>
         </div>
       </div>
+      <Modal
+        size={modalData.size}
+        show={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setModalData({ ...modalData, content: null });
+        }}
+      >
+        <Modal.Header>
+          {modalData.title ?? ""}
+          {modalData.link && (
+            <Link
+              href={modalData.link}
+              target="_blank"
+              className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+            >
+              <ArrowTopRightOnSquareIcon
+                width="24"
+                height="24"
+                className="mb-1 ml-2 inline"
+              />
+            </Link>
+          )}
+        </Modal.Header>
+        <Modal.Body className="max-h-[90vh] overflow-y-auto">
+          {modalData.content ?? ""}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

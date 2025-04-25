@@ -1,4 +1,11 @@
 import FetchService from "@/config/fetch";
+import { Quoter } from "@/entities/Quoter";
+
+interface GetQuotersResponse {
+  success: boolean;
+  quotersPending: Quoter[];
+  quotersProcess: Quoter[];
+}
 
 export class QuoterRepository {
   private _service: any;
@@ -18,7 +25,7 @@ export class QuoterRepository {
     return this._service.post("/admin/quoter/api", body);
   }
 
-  getQuoters(query?: any) {
+  getQuoters(query?: any): Promise<GetQuotersResponse> {
     return this._service.get("/admin/quoter/api", query?.options);
   }
 }
