@@ -1,7 +1,7 @@
 "use client";
 import { Category } from "@/entities/Category";
 import { useContext, useEffect, useState } from "react";
-import { Button, Modal, Spinner, Tooltip } from "flowbite-react";
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, Spinner, Tooltip } from "@heroui/react";
 import Table from "@/components/elements/Table/Table";
 import { MRT_ColumnDef } from "material-react-table";
 import {
@@ -98,7 +98,7 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
         await typeRepository.getProductsByCategory(categoryId);
       setModalData({
         title: `Tipos de producto de ${category.name}`,
-        size: "7xl",
+        size: "5xl",
         content: (
           <ProductTable initialProducts={products} categoryId={categoryId} />
         ),
@@ -144,27 +144,36 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
       Cell: (row) => {
         const category = row.row.original as Category;
         return (
-          <div className="flex space-x-2">
-            <Tooltip content="Agregar Tipos" style="light">
-              <button
-                className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                onClick={() => openTypeProductModal(category)}
+          <div className="flex gap-2">
+            <Tooltip content="Agregar Tipos" color="foreground">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                color="success"
+                onPress={() => openTypeProductModal(category)}
               >
-                <DocumentPlusIcon className="w-4 h-4 text-white" />
-              </button>
+                <DocumentPlusIcon className="w-4 h-4" />
+              </Button>
             </Tooltip>
-            <button
-              className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              onClick={() => openCategoryModal(category)}
+            <Button
+              isIconOnly
+              size="sm"
+              variant="flat"
+              color="primary"
+              onPress={() => openCategoryModal(category)}
             >
-              <PencilIcon className="w-4 h-4 text-white" />
-            </button>
-            <button
-              className="p-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              onClick={() => deleteCategory(category._id)}
+              <PencilIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="flat"
+              color="danger"
+              onPress={() => deleteCategory(category._id)}
             >
-              <XMarkIcon className="w-4 h-4 text-white" />
-            </button>
+              <XMarkIcon className="w-4 h-4" />
+            </Button>
           </div>
         );
       },
@@ -173,11 +182,13 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-xl text-white font-semibold">Productos</h1>
-      <div className="flex flex-col mt-6 bg-gray-800 border-gray-700 rounded-lg">
+      <h1 className="text-xl font-semibold">Productos</h1>
+      <div className="flex flex-col mt-6 bg-content1 border border-divider rounded-lg">
         <div className="justify-between px-4 py-3">
           <div className="w-full pb-2 flex justify-end">
-            <Button onClick={() => openCategoryModal()}>Agregar</Button>
+            <Button color="primary" onPress={() => openCategoryModal()}>
+              Agregar
+            </Button>
           </div>
           <Table
             columns={columnsCategory}
@@ -187,33 +198,35 @@ const CategoryTable = ({ initialCategories }: ICategoryTableProps) => {
         </div>
       </div>
       <Modal
-        size={modalData.size}
-        show={showModal}
+        size={modalData.size as any}
+        isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setModalData({ ...modalData, content: null });
         }}
-        className="dark"
+        scrollBehavior="inside"
       >
-        <Modal.Header>
-          {modalData.title ?? ""}
-          {modalData.link && (
-            <Link
-              href={modalData.link}
-              target="_blank"
-              className="font-medium text-blue-600 hover:underline dark:text-blue-500"
-            >
-              <ArrowTopRightOnSquareIcon
-                width="24"
-                height="24"
-                className="mb-1 ml-2 inline"
-              />
-            </Link>
-          )}
-        </Modal.Header>
-        <Modal.Body className="max-h-[90vh] overflow-y-auto">
-          {modalData.content ?? ""}
-        </Modal.Body>
+        <ModalContent>
+          <ModalHeader className="flex gap-1">
+            {modalData.title ?? ""}
+            {modalData.link && (
+              <Link
+                href={modalData.link}
+                target="_blank"
+                className="font-medium text-primary hover:underline"
+              >
+                <ArrowTopRightOnSquareIcon
+                  width="24"
+                  height="24"
+                  className="mb-1 ml-2 inline"
+                />
+              </Link>
+            )}
+          </ModalHeader>
+          <ModalBody>
+            {modalData.content ?? ""}
+          </ModalBody>
+        </ModalContent>
       </Modal>
     </div>
   );

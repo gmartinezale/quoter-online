@@ -1,8 +1,9 @@
+"use client";
+
 import { MaterialReactTable } from "material-react-table";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
-import { ThemeProvider } from "@emotion/react";
-import { createTheme, useTheme } from "@mui/material";
 import { useMemo } from "react";
+import { useTheme } from "next-themes";
 
 interface ITableProps {
   columns: any[];
@@ -11,41 +12,27 @@ interface ITableProps {
 }
 
 const Table = ({ columns, data, isLoading }: ITableProps) => {
-  const globalTHeme = useTheme();
-  const defaultTheme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: "dark",
-          primary: {
-            main: "#000000",
-          },
-          secondary: {
-            // White color
-            main: "#FFFFFF",
-          },
-        },
-        components: {
-          MuiInput: {
-            styleOverrides: {
-              root: {
-                backgroundColor: "#00000",
-              },
-            },
-          },
-        },
-      }),
-    [globalTHeme],
-  );
+  const { theme } = useTheme();
+
   return (
-    <ThemeProvider theme={defaultTheme}>
+    <div className="w-full">
       <MaterialReactTable
         data={data}
         columns={columns}
         localization={MRT_Localization_ES}
         state={{ isLoading }}
+        muiTableProps={{
+          sx: {
+            backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+          },
+        }}
+        muiTablePaperProps={{
+          sx: {
+            backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+          },
+        }}
       />
-    </ThemeProvider>
+    </div>
   );
 };
 

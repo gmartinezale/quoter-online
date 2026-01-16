@@ -1,30 +1,32 @@
 import { Category } from "@/entities/Category";
 import { Document, Schema, model } from "mongoose";
 import "./category";
-
-interface IPrice {
-  description: string;
-  price: number;
-}
+import { IProductPrice, ProductPriceSchema } from "@/interfaces/ProductInterface";
 
 interface IProduct extends Document {
   name: string;
-  prices: IPrice[];
+  price: number; // Base price
+  types: IProductPrice[]; // Product types with individual prices
+  finishes: IProductPrice[]; // Product finishes with individual prices
+  extras?: IProductPrice[]; // Optional extras that can be added to quotation
+  stock?: number; // Optional stock quantity
+  minPurchase?: number; // Optional minimum purchase quantity
   active: boolean;
   category: string | Category;
 }
 
+// Main product schema
 const ProductSchema = new Schema<IProduct>(
   {
-    name: String,
-    active: Boolean,
-    prices: [
-      {
-        description: String,
-        price: Number,
-      },
-    ],
-    category: { type: Schema.Types.ObjectId, ref: "Category" },
+    name: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    types: { type: [ProductPriceSchema], default: [] },
+    finishes: { type: [ProductPriceSchema], default: [] },
+    extras: { type: [ProductPriceSchema], default: [] },
+    stock: { type: Number, min: 0 },
+    minPurchase: { type: Number, min: 1 },
+    active: { type: Boolean, default: true },
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
   },
   { timestamps: true },
 );

@@ -3,11 +3,11 @@ import Category from "@/models/category";
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     const category = await Category.findOneAndUpdate(
       { _id: id },
       { active: false },

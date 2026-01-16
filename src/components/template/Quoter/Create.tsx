@@ -1,12 +1,11 @@
 "use client";
 import { Category } from "@/entities/Category";
-import { Product } from "@/entities/Product";
-import { Type } from "@/entities/Type";
+import { Product, ProductExtra } from "@/entities/Product";
 import { ProductsQuoter } from "@/entities/Quoter";
 import { useContext, useEffect, useState } from "react";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Controller, useForm } from "react-hook-form";
-import { Button, Datepicker, TextInput, Spinner } from "flowbite-react";
+import { Button, Input, DatePicker, Spinner } from "@heroui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { QuoterRepository } from "@/data/quoter.repository";
 import { ProductForm } from "./components/ProductForm";
@@ -46,21 +45,16 @@ export default function CreateQuoter({
   const [filterProducts, setFilterProducts] = useState<
     Record<number, Product[]>
   >({});
-  const [extraProducts, setExtraProducts] = useState<Record<number, Type[]>>(
-    {},
-  );
-  const [filterTypes, setFilterTypes] = useState<Record<number, Type[]>>({});
   const [totalCalculate, setTotalCalculate] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [productQuoters, setProductQuoters] = useState<ProductsQuoter[]>([
     {
       amount: 0,
       price: 0,
-      description: "",
       category: "",
-      type: "",
       isFinished: false,
       extras: [],
+      product: ""
     },
   ]);
 
@@ -86,11 +80,6 @@ export default function CreateQuoter({
       (product) => product._id === productId,
     );
     return product?.name ?? "";
-  };
-
-  const getDescription = (description: string, index: number) => {
-    const type = filterTypes[index]?.find((type) => type._id === description);
-    return type?.description ?? "";
   };
 
   const saveQuoter = async (data: any) => {
@@ -123,11 +112,10 @@ export default function CreateQuoter({
       {
         amount: 0,
         price: 0,
-        description: "",
         category: "",
-        type: "",
         extras: [],
         isFinished: false,
+        product: ""
       },
     ]);
   };
@@ -155,14 +143,12 @@ export default function CreateQuoter({
                     control={control}
                     defaultValue={""}
                     render={({ field }) => (
-                      <TextInput
-                        value={field.value || ""}
+                      <Input
+                        {...field}
                         type="text"
-                        id="artist"
-                        required
+                        variant="bordered"
                         placeholder="Ingrese nombre del artista"
-                        className="block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"
-                        onChange={(e) => field.onChange(e.target.value)}
+                        isRequired
                       />
                     )}
                   />
@@ -181,16 +167,9 @@ export default function CreateQuoter({
                     control={control}
                     defaultValue={""}
                     render={({ field }) => (
-                      <Datepicker
-                        type="text"
-                        id="artist"
-                        language="es"
-                        className="block w-full shadow-sm sm:text-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"
-                        minDate={new Date()}
-                        defaultDate={new Date()}
-                        onSelectedDateChanged={(date) => {
-                          field.onChange(date);
-                        }}
+                      <DatePicker
+                        variant="bordered"
+                        label="Fecha de entrega"
                         onChange={(date) => {
                           field.onChange(date);
                         }}
@@ -221,22 +200,17 @@ export default function CreateQuoter({
                       index={index}
                       categories={categories}
                       filterProducts={filterProducts}
-                      filterTypes={filterTypes}
-                      extraProducts={extraProducts}
                       productQuoters={productQuoters}
                       setProductQuoters={setProductQuoters}
                       setFilterProducts={setFilterProducts}
-                      setFilterTypes={setFilterTypes}
-                      setExtraProducts={setExtraProducts}
                     />
                     {productQuoters[index].extras.length > 0 && (
                       <ExtraProducts
                         index={index}
-                        extraProducts={extraProducts}
+                        extraProducts={{[index]: productQuoters[index].extras as ProductExtra[]}}
                         productQuoters={productQuoters}
                         setProductQuoters={setProductQuoters}
                         getProduct={getProduct}
-                        getDescription={getDescription}
                       />
                     )}
                   </div>
@@ -247,16 +221,11 @@ export default function CreateQuoter({
                 <TotalAmount totalCalculate={totalCalculate} isMobile />
                 <Button
                   type="submit"
-                  className="justify-center py-2 px-4 text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 float-right"
-                  disabled={isLoading}
+                  color="success"
+                  className="float-right"
+                  isLoading={isLoading}
                 >
-                  {isLoading && (
-                    <span>
-                      Guardando...
-                      <Spinner className="ml-2 text-gray-400" />
-                    </span>
-                  )}
-                  {!isLoading && <span>Guardar cotización</span>}
+                  Guardar cotización
                 </Button>
               </div>
             </div>

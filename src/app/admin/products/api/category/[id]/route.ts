@@ -3,11 +3,12 @@ import Product from "@/models/product";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
-    const CategoryId = context.params.id;
+    const { id: CategoryId } = await params;
+
     const seacrhObject: any = {
       active: true,
       category: CategoryId,

@@ -3,11 +3,11 @@ import Product from "@/models/product";
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     const product = await Product.findOneAndUpdate(
       { _id: id },
       { active: false },

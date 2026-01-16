@@ -8,29 +8,35 @@ import { cookies } from "next/headers";
 import { Suspense } from "react";
 
 async function QuoterDashboardWrapper() {
-  const cookiesStore = cookies();
-  const token = cookiesStore.get("next-auth.session-token")?.value;
-  const repository = QuoterRepository.instance(token);
-  const {
-    success,
-    quotersPending,
-    quotersProcess,
-  }: {
-    success: boolean;
-    quotersPending: Quoter[];
-    quotersProcess: Quoter[];
-  } = await repository.getQuoters();
-
-  if (!success) {
-    throw new Error("Error getting quoters");
+  try {
+    const cookiesStore = await cookies();
+    const token = cookiesStore.get("session")?.value;
+    const repository = QuoterRepository.instance(token);
+    const {
+      success,
+      quotersPending,
+      quotersProcess,
+    }: {
+      success: boolean;
+      quotersPending: Quoter[];
+      quotersProcess: Quoter[];
+    } = await repository.getQuoters();
+  
+    if (!success) {
+      throw new Error("Error getting quoters");
+    }
+  
+    return (
+      <QuoterDashboard
+        quotersPending={quotersPending}
+        quotersProcess={quotersProcess}
+      />
+    );
   }
-
-  return (
-    <QuoterDashboard
-      quotersPending={quotersPending}
-      quotersProcess={quotersProcess}
-    />
-  );
+  catch (error) {
+    console.error("Error in QuoterDashboardWrapper:", error);
+    return <div className="text-red-500">Failed to load dashboard data.</div>;
+  }
 }
 
 export default async function DashboardPage() {

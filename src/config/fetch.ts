@@ -67,7 +67,7 @@ export default class FetchService {
 
   setAuthHeader(token?: string): void {
     if (token) {
-      this.headers["cookie"] = `next-auth.session-token=${token}`;
+      this.headers["cookie"] = `session=${token}`;
     } else {
       delete this.headers["cookie"];
     }
@@ -75,6 +75,7 @@ export default class FetchService {
 
   async get(path: string, options?: any): Promise<any> {
     const { url, newOptions } = this.applyOptions(path, options);
+    console.log('Fetching URL:', url.toString());
     const res = await fetch(url, {
       ...newOptions,
       method: "GET",

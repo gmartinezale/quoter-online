@@ -7,7 +7,7 @@ import SkeletonLoading from "@/components/layouts/loading";
 
 const getCategories = async () => {
   try {
-    const cookiesStore = cookies();
+    const cookiesStore = await cookies();
     const token = cookiesStore.get("next-auth.session-token")?.value;
     const repository = CategoryRepository.instance(token);
     const { categories } = await repository.getCategories();

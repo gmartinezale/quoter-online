@@ -1,22 +1,24 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
+const {heroui} = require("@heroui/theme");
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/flowbite-react/**/*.js",
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './pages/**/*.{ts,tsx}',
+    './node_modules/@heroui/theme/dist/components/*.{ts,tsx,js,jsx}',
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
+      animation: {
+        'card-flip': 'card-flip 2s ease-in-out forwards',
+        'card-flip-absolute': 'card-flip-absolute 2s ease-in-out forwards',
+        shine: 'shine 2s ease-in',
+      }
     },
   },
   darkMode: "class",
-  plugins: [require("flowbite/plugin")],
-};
-export default config;
+  plugins: [heroui()],
+}
+
+export default config

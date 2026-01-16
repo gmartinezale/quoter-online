@@ -1,17 +1,16 @@
 "use client";
 import { ChangeEvent } from "react";
-import { Type } from "@/entities/Type";
 import { ProductsQuoter } from "@/entities/Quoter";
-import { Card, Select, TextInput } from "flowbite-react";
+import { Card, CardHeader, CardBody, Select, SelectItem, Input } from "@heroui/react";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { Product, ProductExtra } from "@/entities/Product";
 
 interface ExtraProductsProps {
   index: number;
-  extraProducts: Record<number, Type[]>;
+  extraProducts: Record<number, ProductExtra[]>;
   productQuoters: ProductsQuoter[];
   setProductQuoters: (products: ProductsQuoter[]) => void;
   getProduct: (productId: string, index: number) => string;
-  getDescription: (description: string, index: number) => string;
 }
 
 export function ExtraProducts({
@@ -20,7 +19,6 @@ export function ExtraProducts({
   productQuoters,
   setProductQuoters,
   getProduct,
-  getDescription,
 }: ExtraProductsProps) {
   const handleAddExtra = () => {
     const updatedProducts = [...productQuoters];
@@ -54,14 +52,10 @@ export function ExtraProducts({
   };
 
   return (
-    <Card className="col-span-4 mt-4 bg-gray-800 border-gray-700">
-      <div className="mb-4 flex items-center justify-between">
-        <h5 className="text-lg font-semibold text-white flex items-center gap-2">
-          Extras{" "}
-          {`${getProduct(
-            productQuoters[index].type as string,
-            index,
-          )} ${getDescription(productQuoters[index].description, index)}`}
+    <Card className="col-span-4 mt-4">
+      <CardHeader className="flex items-center justify-between">
+        <h5 className="text-lg font-semibold flex items-center gap-2">
+          Extras
           <button
             type="button"
             className="inline-flex items-center justify-center p-1.5 rounded-lg bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
@@ -70,8 +64,9 @@ export function ExtraProducts({
             <PlusIcon className="h-4 w-4 text-white" />
           </button>
         </h5>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-4">
+      </CardHeader>
+      <CardBody>
+        <div className="mt-3 grid grid-cols-2 gap-4">
         {productQuoters[index].extras?.map((extra, extraIndex) => (
           <div key={extraIndex} className="col-span-4 sm:col-span-1">
             <label className="block text-sm font-medium text-gray-400">
@@ -79,20 +74,21 @@ export function ExtraProducts({
             </label>
             <div className="mt-1">
               <Select
-                className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-                onChange={(e) => handleExtraChange(e, extraIndex)}
+                variant="bordered"
+                placeholder="Seleccione un extra"
+                onChange={(e) => {
+                  const mockEvent = {
+                    target: { value: e.target.value }
+                  } as ChangeEvent<HTMLSelectElement>;
+                  handleExtraChange(mockEvent, extraIndex);
+                }}
               >
-                <option value="" disabled selected className="text-gray-400">
-                  Seleccione un extra
-                </option>
                 {extraProducts[index]?.map((product) => (
-                  <option
-                    key={"extra-" + product.description}
-                    value={`${product.description}-${product.price}`}
-                    className="text-white"
+                  <SelectItem
+                    key={`${product.description}-${product.price}`}
                   >
                     {product.description}
-                  </option>
+                  </SelectItem>
                 ))}
               </Select>
             </div>
@@ -104,18 +100,17 @@ export function ExtraProducts({
               Cantidad
             </label>
             <div className="mt-1">
-              <TextInput
-                defaultValue={0}
+              <Input
                 type="number"
-                required
+                variant="bordered"
                 placeholder="Ingrese cantidad"
-                className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
+                defaultValue="0"
+                isRequired
                 onChange={(e) => handleExtraAmountChange(e, extraIndex)}
               />
             </div>
           </div>
         ))}
-      </div>
-    </Card>
+      </div>      </CardBody>    </Card>
   );
 }

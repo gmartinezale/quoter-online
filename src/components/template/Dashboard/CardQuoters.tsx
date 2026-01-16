@@ -8,7 +8,7 @@ import {
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { Modal } from "flowbite-react";
+import { Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/react";
 import { useState } from "react";
 import { ModalData } from "@/types";
 import ModalDetailQuoter from "./ModalDetailQuoter";
@@ -82,32 +82,35 @@ export default function CardQuoters({ quoter }: ICardQuotersProps) {
         </div>
       </div>
       <Modal
-        size={modalData.size}
-        show={showModal}
+        size={modalData.size as any}
+        isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setModalData({ ...modalData, content: null });
         }}
+        scrollBehavior="inside"
       >
-        <Modal.Header>
-          {modalData.title ?? ""}
-          {modalData.link && (
-            <Link
-              href={modalData.link}
-              target="_blank"
-              className="font-medium text-blue-600 hover:underline dark:text-blue-500"
-            >
-              <ArrowTopRightOnSquareIcon
-                width="24"
-                height="24"
-                className="mb-1 ml-2 inline"
-              />
-            </Link>
-          )}
-        </Modal.Header>
-        <Modal.Body className="max-h-[90vh] overflow-y-auto">
-          {modalData.content ?? ""}
-        </Modal.Body>
+        <ModalContent>
+          <ModalHeader className="flex gap-1">
+            {modalData.title ?? ""}
+            {modalData.link && (
+              <Link
+                href={modalData.link}
+                target="_blank"
+                className="font-medium text-primary hover:underline"
+              >
+                <ArrowTopRightOnSquareIcon
+                  width="24"
+                  height="24"
+                  className="mb-1 ml-2 inline"
+                />
+              </Link>
+            )}
+          </ModalHeader>
+          <ModalBody>
+            {modalData.content ?? ""}
+          </ModalBody>
+        </ModalContent>
       </Modal>
     </div>
   );

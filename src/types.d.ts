@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
-import { ModalSizes } from "flowbite-react";
 
 export type ModalData = {
-  size?: keyof ModalSizes;
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full";
   title?: string;
   link?: string;
   content?: ReactNode | string;

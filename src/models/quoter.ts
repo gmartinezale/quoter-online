@@ -1,24 +1,27 @@
 import { Document, Schema, model } from "mongoose";
 import "./product";
-import "./type";
 import "./category";
-import { Type } from "@/entities/Type";
 import { Product } from "@/entities/Product";
 import { Category } from "@/entities/Category";
+import { IProductPrice, ProductPriceSchema } from "@/interfaces/ProductInterface";
 
+// Extra products added to the quotation
 interface IExtraProductQuoter {
   description: string;
   price: number;
   amount: number;
 }
+
+// Product item in quotation with selected type and finish
 interface IProductsQuoter {
-  type: string | Product;
+  product: string | Product; // Reference to the product
+  productType?: IProductPrice[]; // ID of the selected type from product.types
+  productFinish?: IProductPrice[]; // ID of the selected finish from product.finishes
   amount: number;
-  price: number;
-  description: string | Type;
+  price: number; // Calculated price (base + type + finish)
   isFinished: boolean;
   category: string | Category;
-  extras: IExtraProductQuoter[];
+  extras: IExtraProductQuoter[]; // Selected extras from product.extras
 }
 
 interface IQuoter extends Document {
@@ -39,18 +42,19 @@ const QuoterSchema = new Schema<IQuoter>(
     products: [
       {
         _id: false,
-        type: { type: Schema.Types.ObjectId, ref: "Product" },
-        amount: Number,
-        price: Number,
-        description: { type: Schema.Types.ObjectId, ref: "Type" },
-        category: { type: Schema.Types.ObjectId, ref: "Category" },
+        product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+        productType: { type: [ProductPriceSchema], default: [] }, // ID from product.types subdocument
+        productFinish: { type: [ProductPriceSchema], default: [] }, // ID from product.finishes subdocument
+        amount: { type: Number, required: true, min: 1 },
+        price: { type: Number, required: true, min: 0 },
+        category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
         isFinished: { type: Boolean, default: false },
         extras: [
           {
             _id: false,
-            description: String,
-            price: Number,
-            amount: Number,
+            description: { type: String, required: true },
+            price: { type: Number, required: true, min: 0 },
+            amount: { type: Number, required: true, min: 1 },
           },
         ],
       },

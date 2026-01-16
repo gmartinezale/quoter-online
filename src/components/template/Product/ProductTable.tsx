@@ -1,7 +1,7 @@
 "use client";
 import { Product } from "@/entities/Product";
 import { useContext, useEffect, useState } from "react";
-import { Button, Modal, Spinner } from "flowbite-react";
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, Spinner } from "@heroui/react";
 import Table from "@/components/elements/Table/Table";
 import { MRT_ColumnDef } from "material-react-table";
 import {
@@ -17,8 +17,6 @@ import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Category } from "@/entities/Category";
 import formatCurrency from "@/utils/formatCurrency";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { TypeRepository } from "@/data/types.repository";
-import { Type } from "@/entities/Type";
 
 interface IProductTableProps {
   initialProducts: Product[];
@@ -109,44 +107,97 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
     }
   };
 
-  const showModalPrices = async (productId: string) => {
+  const showModalDetails = async (product: Product) => {
     try {
-      const typeRepository = TypeRepository.instance();
-      const { types } = await typeRepository.getTypesByProduct(productId);
       setShowModal(true);
       setModalData({
-        title: "Tipos",
-        size: "2xl",
+        title: `Detalles - ${product.name}`,
+        size: "3xl",
         content: (
-          <div className="flex flex-col text-white">
-            Espere un momento.... <Spinner />
+          <div className="flex flex-col gap-6 text-white p-4">
+            {/* Base Price */}
+            <div className="border-b border-gray-700 pb-4">
+              <h3 className="text-lg font-semibold mb-2">Precio Base</h3>
+              <p className="text-xl">{formatCurrency(product.price)}</p>
+            </div>
+
+            {/* Stock and Min Purchase */}
+            {(product.stock !== undefined || product.minPurchase !== undefined) && (
+              <div className="border-b border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-2">Información de Inventario</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {product.stock !== undefined && (
+                    <div>
+                      <p className="text-sm text-gray-400">Stock disponible:</p>
+                      <p className="text-lg">{product.stock} unidades</p>
+                    </div>
+                  )}
+                  {product.minPurchase !== undefined && (
+                    <div>
+                      <p className="text-sm text-gray-400">Compra mínima:</p>
+                      <p className="text-lg">{product.minPurchase} unidades</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Types */}
+            {product.types && product.types.length > 0 && (
+              <div className="border-b border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-3">Tipos</h3>
+                <div className="space-y-2">
+                  {product.types.map((type, index) => (
+                    <div key={type._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
+                      <span>{type.description}</span>
+                      <span className="font-semibold">{formatCurrency(type.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Finishes */}
+            {product.finishes && product.finishes.length > 0 && (
+              <div className="border-b border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-3">Acabados</h3>
+                <div className="space-y-2">
+                  {product.finishes.map((finish, index) => (
+                    <div key={finish._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
+                      <span>{finish.description}</span>
+                      <span className="font-semibold">{formatCurrency(finish.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Extras */}
+            {product.extras && product.extras.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Extras Opcionales</h3>
+                <div className="space-y-2">
+                  {product.extras.map((extra, index) => (
+                    <div key={extra._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
+                      <span>{extra.description}</span>
+                      <span className="font-semibold">{formatCurrency(extra.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {(!product.types || product.types.length === 0) && 
+             (!product.finishes || product.finishes.length === 0) && 
+             (!product.extras || product.extras.length === 0) && (
+              <p className="text-center text-gray-400">No hay detalles adicionales configurados</p>
+            )}
           </div>
         ),
       });
-      if (types.length === 0) {
-        showToast(false, "No existen precios para este producto");
-      } else {
-        setModalData({
-          title: "Tipos",
-          size: "2xl",
-          content: (
-            <div className="flex flex-col text-white">
-              {(types as Type[]).map((type, index) => (
-                <div key={index} className="flex space-x-2">
-                  <div className="flex-1">
-                    <h4>{type.description}</h4>
-                  </div>
-                  <div className="flex-1 text-white">
-                    {formatCurrency(type.price)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ),
-        });
-      }
     } catch (error) {
-      console.error("Error get types: ", error);
+      console.error("Error showing product details: ", error);
       throw error;
     }
   };
@@ -163,14 +214,22 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
       accessorKey: "name",
     },
     {
-      header: "Tipos",
+      header: "Precio Base",
+      accessorKey: "price",
+      Cell: (row) => {
+        const price = row.cell.getValue<number>();
+        return formatCurrency(price);
+      },
+    },
+    {
+      header: "Detalles",
       accessorKey: "_id",
       Cell: (row) => {
-        const id = row.cell.getValue<string>();
+        const product = row.row.original as Product;
         return (
           <MagnifyingGlassIcon
-            className="w-5 h-5 text-white cursor-pointer"
-            onClick={() => showModalPrices(id)}
+            className="w-5 h-5 text-white cursor-pointer hover:text-blue-400"
+            onClick={() => showModalDetails(product)}
           />
         );
       },
@@ -221,7 +280,7 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
       <div className="flex flex-col">
         <div className="justify-between px-4 py-3">
           <div className="w-full pb-2 flex justify-end">
-            <Button onClick={() => openProductModal()}>Agregar</Button>
+            <Button color="primary" onPress={() => openProductModal()}>Agregar</Button>
           </div>
           <Table
             columns={columnsProduct}
@@ -232,31 +291,33 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
       </div>
       <Modal
         size={modalData.size}
-        show={showModal}
+        isOpen={showModal}
         onClose={() => {
           setShowModal(false);
           setModalData({ ...modalData, content: null });
         }}
       >
-        <Modal.Header>
-          {modalData.title ?? ""}
-          {modalData.link && (
-            <Link
-              href={modalData.link}
-              target="_blank"
-              className="font-medium text-blue-600 hover:underline dark:text-blue-500"
-            >
-              <ArrowTopRightOnSquareIcon
-                width="24"
-                height="24"
-                className="mb-1 ml-2 inline"
-              />
-            </Link>
-          )}
-        </Modal.Header>
-        <Modal.Body className="max-h-[90vh] overflow-y-auto">
-          {modalData.content ?? ""}
-        </Modal.Body>
+        <ModalContent>
+          <ModalHeader className="flex gap-1">
+            {modalData.title ?? ""}
+            {modalData.link && (
+              <Link
+                href={modalData.link}
+                target="_blank"
+                className="font-medium text-blue-600 hover:underline dark:text-blue-500"
+              >
+                <ArrowTopRightOnSquareIcon
+                  width="24"
+                  height="24"
+                  className="mb-1 ml-2 inline"
+                />
+              </Link>
+            )}
+          </ModalHeader>
+          <ModalBody className="max-h-[90vh] overflow-y-auto">
+            {modalData.content ?? ""}
+          </ModalBody>
+        </ModalContent>
       </Modal>
     </div>
   );

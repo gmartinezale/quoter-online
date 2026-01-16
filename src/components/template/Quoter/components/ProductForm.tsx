@@ -1,39 +1,30 @@
 "use client";
-import { ChangeEvent } from "react";
+import { ChangeEvent, use, useState } from "react";
 import { Category } from "@/entities/Category";
 import { Product } from "@/entities/Product";
-import { Type } from "@/entities/Type";
 import { ProductsQuoter } from "@/entities/Quoter";
 import { ProductRepository } from "@/data/products.repository";
-import { TypeRepository } from "@/data/types.repository";
-import { Select, TextInput } from "flowbite-react";
+import { Select, SelectItem, Input } from "@heroui/react";
 import { DocumentPlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 
 interface ProductFormProps {
   index: number;
   categories: Category[];
   filterProducts: Record<number, Product[]>;
-  filterTypes: Record<number, Type[]>;
-  extraProducts: Record<number, Type[]>;
   productQuoters: ProductsQuoter[];
   setProductQuoters: (products: ProductsQuoter[]) => void;
   setFilterProducts: (products: Record<number, Product[]>) => void;
-  setFilterTypes: (types: Record<number, Type[]>) => void;
-  setExtraProducts: (extras: Record<number, Type[]>) => void;
 }
 
 export function ProductForm({
   index,
   categories,
   filterProducts,
-  filterTypes,
-  extraProducts,
   productQuoters,
   setProductQuoters,
   setFilterProducts,
-  setFilterTypes,
-  setExtraProducts,
 }: ProductFormProps) {
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const changeCategorySelect = async (e: ChangeEvent<HTMLSelectElement>) => {
     try {
       const categoryId = e.target.value;
@@ -49,14 +40,6 @@ export function ProductForm({
       const extraItems = products.find((product: Product) =>
         product.name.toLowerCase().includes("extra"),
       );
-
-      if (extraItems) {
-        const repositoryProduct = TypeRepository.instance();
-        const { types } = await repositoryProduct.getTypes({
-          options: { params: { productId: extraItems._id } },
-        });
-        setExtraProducts({ ...extraProducts, [index]: types });
-      }
 
       const filterCategory = categories.find(
         (category) => category._id === categoryId,
@@ -75,19 +58,18 @@ export function ProductForm({
       const productId = e.target.value;
       if (!productId) return;
 
-      const repository = TypeRepository.instance();
-      const { types } = await repository.getTypes({
-        options: { params: { productId } },
-      });
+      // const repository = TypeRepository.instance();
+      // const { types } = await repository.getTypes({
+      //   options: { params: { productId } },
+      // });
 
-      setFilterTypes({ ...filterTypes, [index]: types });
+      // setFilterTypes({ ...filterTypes, [index]: types });
 
       const filterProduct = filterProducts[index]?.find(
         (product) => product._id === productId,
       );
 
       const updatedProducts = [...productQuoters];
-      updatedProducts[index].type = filterProduct?._id ?? "";
       setProductQuoters(updatedProducts);
     } catch (error) {
       console.error("Error getting types:", error);
@@ -96,12 +78,8 @@ export function ProductForm({
 
   const handleChangeType = (e: ChangeEvent<HTMLSelectElement>) => {
     const typeId = e.target.value;
-    const type = filterTypes[index]?.find((type) => type._id === typeId);
-    if (!type) return;
 
     const updatedProducts = [...productQuoters];
-    updatedProducts[index].price = type.price;
-    updatedProducts[index].description = type._id ?? "";
     setProductQuoters(updatedProducts);
   };
 
@@ -136,20 +114,19 @@ export function ProductForm({
         </label>
         <div className="mt-1">
           <Select
-            className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-            onChange={changeCategorySelect}
+            variant="bordered"
+            placeholder="Seleccione un producto"
+            onChange={(e) => {
+              const mockEvent = {
+                target: { value: e.target.value }
+              } as ChangeEvent<HTMLSelectElement>;
+              changeCategorySelect(mockEvent);
+            }}
           >
-            <option value="" disabled selected className="text-gray-400">
-              Seleccione un producto
-            </option>
             {categories.map((category) => (
-              <option
-                key={category._id}
-                value={category._id}
-                className="text-white"
-              >
+              <SelectItem key={category._id}>
                 {category.name}
-              </option>
+              </SelectItem>
             ))}
           </Select>
         </div>
@@ -161,21 +138,20 @@ export function ProductForm({
         </label>
         <div className="mt-1">
           <Select
-            className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-            onChange={changeProductSelect}
-            required
+            variant="bordered"
+            placeholder="Seleccione un acabado"
+            isRequired
+            onChange={(e) => {
+              const mockEvent = {
+                target: { value: e.target.value }
+              } as ChangeEvent<HTMLSelectElement>;
+              changeProductSelect(mockEvent);
+            }}
           >
-            <option value="" disabled selected className="text-gray-400">
-              Seleccione un acabado
-            </option>
             {filterProducts[index]?.map((product) => (
-              <option
-                key={product._id}
-                value={product._id}
-                className="text-white"
-              >
+              <SelectItem key={product._id}>
                 {product.name}
-              </option>
+              </SelectItem>
             ))}
           </Select>
         </div>
@@ -185,18 +161,19 @@ export function ProductForm({
         <label className="block text-sm font-medium text-gray-400">Tipo</label>
         <div className="mt-1">
           <Select
-            className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-            onChange={handleChangeType}
-            required
+            variant="bordered"
+            placeholder="Seleccione un precio"
+            isRequired
+            onChange={(e) => {
+              const mockEvent = {
+                target: { value: e.target.value }
+              } as ChangeEvent<HTMLSelectElement>;
+              handleChangeType(mockEvent);
+            }}
           >
-            <option value="" disabled selected className="text-gray-400">
-              Seleccione un precio
-            </option>
-            {filterTypes[index]?.map((type) => (
-              <option key={type._id} value={type._id} className="text-white">
-                {type.description}
-              </option>
-            ))}
+            <SelectItem key="type1">
+              Seleccione un tipo
+            </SelectItem>
           </Select>
         </div>
       </div>
@@ -206,15 +183,15 @@ export function ProductForm({
           Cantidad
         </label>
         <div className="mt-1 flex items-center gap-2">
-          <TextInput
-            defaultValue={0}
+          <Input
             type="number"
-            required
+            variant="bordered"
             placeholder="Ingrese cantidad"
-            className="w-full bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
+            defaultValue="0"
+            isRequired
             onChange={handleAmountChange}
           />
-          {extraProducts[index] && extraProducts[index].length > 0 && (
+          {selectedProducts[index] && selectedProducts[index]?.extras && selectedProducts[index]?.extras.length > 0 && (
             <button
               type="button"
               className="inline-flex items-center justify-center p-1.5 rounded-lg bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"

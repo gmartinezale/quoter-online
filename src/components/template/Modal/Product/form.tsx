@@ -1,13 +1,13 @@
-// generate a component use react-hook-form
+// Product form component using react-hook-form
 import { ProductRepository } from "@/data/products.repository";
-import { Button, Select, Spinner, TextInput } from "flowbite-react";
+import { Button, Select, SelectItem, Input, Spinner, Tabs, Tab } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { CategoryRepository } from "@/data/categories.repository";
 import { Category } from "@/entities/Category";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { TypeRepository } from "@/data/types.repository";
+import { Product } from "@/entities/Product";
 
 interface IFormProductProps {
   closeProductFormModal: (update: boolean) => void;
@@ -52,25 +52,6 @@ export function FormProduct({
     }
   };
 
-  const getTypes = async (productId: string) => {
-    try {
-      const repository = TypeRepository.instance();
-      const { types } = await repository.getTypesByProduct(productId);
-      console.log("types", types);
-      setValue("types", types);
-    } catch (error) {
-      console.error("Error get types: ", error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    getCategories().then(() => setIsLoading(false));
-    if (id && id !== "") {
-      getTypes(id);
-    }
-  }, []);
-
   useEffect(() => {
     reset();
     emailInputRef.current?.focus();
@@ -105,154 +86,151 @@ export function FormProduct({
 
   if (isLoading) {
     return (
-      <div className="text-white">
-        Espere un momento.... <Spinner />
+      <div className="flex items-center gap-2">
+        <Spinner size="sm" />
+        <span>Espere un momento...</span>
       </div>
     );
   }
 
   return (
-    <form className="dark" onSubmit={handleSubmit(saveProduct)}>
-      <div className="flex flex-col space-y-2">
-        <div className="block mb-2">
-          <div className="mb-2 block text-white">
-            <label htmlFor="name">Nombre</label>
-          </div>
+    <form onSubmit={handleSubmit(saveProduct)}>
+      <div className="flex flex-col gap-4">
+        <Controller
+          name="name"
+          control={control}
+          defaultValue={name}
+          render={({ field }) => (
+            <Input
+              {...field}
+              label="Nombre"
+              type="text"
+              placeholder="Ingrese nombre del producto"
+              variant="bordered"
+              ref={emailInputRef}
+              isRequired
+            />
+          )}
+        />
+
+        {!category && (
           <Controller
-            name="name"
+            name="category"
             control={control}
-            defaultValue={name}
             render={({ field }) => (
-              <TextInput
-                value={field.value || ""}
-                type="text"
-                className="w-full pb-2 rounded"
-                placeholder="Ingrese nombre del producto"
-                color="gray"
-                ref={emailInputRef}
-                onChange={(e) => field.onChange(e.target.value)}
-                required
-              />
+              <Select
+                {...field}
+                label="Categoría"
+                placeholder="Seleccione una categoría"
+                variant="bordered"
+                isRequired
+                selectedKeys={field.value ? [field.value] : []}
+                onSelectionChange={(keys) => {
+                  const value = Array.from(keys)[0] as string;
+                  field.onChange(value);
+                }}
+              >
+                {categories.map((categoryItem) => (
+                  <SelectItem key={categoryItem._id || ""}>
+                    {categoryItem.name}
+                  </SelectItem>
+                ))}
+              </Select>
             )}
           />
-        </div>
-        <div className="block mb-2">
-          {!category && (
-            <>
-              <div className="mb-2 block text-white">
-                <label htmlFor="category">Categoría</label>
-              </div>
+        )}
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold">Tipos:</h2>
+            <Button
+              type="button"
+              isIconOnly
+              size="sm"
+              color="success"
+              variant="flat"
+              onPress={() =>
+                append({ _id: "", description: "", price: 0, stock: 0 })
+              }
+            >
+              <PlusIcon className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {fields.map((item, index) => (
+            <div key={`${item._id}-${index}`} className="flex gap-2 items-end">
               <Controller
-                name="category"
+                name={`types.${index}.description`}
                 control={control}
+                defaultValue={item.description}
                 render={({ field }) => (
-                  <Select
-                    value={field.value || ""}
-                    className="w-full pb-2 rounded"
-                    placeholder="Seleccione una categoría"
-                    onChange={(e) => field.onChange(e.target.value)}
-                    required
-                  >
-                    <option value="" disabled selected={!category}>
-                      Seleccione una categoría
-                    </option>
-                    {categories.map((categoryItem) => (
-                      <option
-                        key={categoryItem._id}
-                        value={categoryItem._id}
-                        selected={categoryItem._id === category ? true : false}
-                      >
-                        {categoryItem.name}
-                      </option>
-                    ))}
-                  </Select>
+                  <Input
+                    {...field}
+                    label="Descripción"
+                    type="text"
+                    placeholder="Descripción"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                  />
                 )}
               />
-            </>
-          )}
-          <div className="block my-2">
-            <div className="mb-2 text-white flex items-center">
-              <h2 className="">
-                Tipos:
-                <button
-                  type="button"
-                  className="ml-2 p-1 rounded-full bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  onClick={() =>
-                    append({ _id: "", description: "", price: 0, stock: 0 })
-                  }
-                >
-                  <PlusIcon className="h-5 w-5" />
-                </button>
-              </h2>
-            </div>
-            {fields.map((item, index) => (
-              <div
-                key={`${item._id}-${index}`}
-                className="pl-4 flex flex-col text-white"
+              <Controller
+                name={`types.${index}.stock`}
+                control={control}
+                defaultValue={item.stock}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    value={field.value?.toString() || ""}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    label="Stock"
+                    type="number"
+                    placeholder="Stock"
+                    variant="bordered"
+                    size="sm"
+                  />
+                )}
+              />
+              <Controller
+                name={`types.${index}.price`}
+                control={control}
+                defaultValue={item.price}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    value={field.value?.toString() || ""}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    label="Precio"
+                    type="number"
+                    placeholder="Precio"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                  />
+                )}
+              />
+              <Button
+                type="button"
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={() => remove(index)}
               >
-                <div className="flex space-x-3 items-center">
-                  <label className="w-24">Descripción:</label>
-                  <Controller
-                    name={`types.${index}.description`}
-                    control={control}
-                    defaultValue={item.description}
-                    render={({ field }) => (
-                      <TextInput
-                        value={field.value || ""}
-                        type="text"
-                        className="w-1/2 pb-2 rounded"
-                        placeholder="Ingrese descripción del precio"
-                        onChange={(e) => field.onChange(e.target.value)}
-                        required
-                      />
-                    )}
-                  />
-                  <label className="w-24">Stock:</label>
-                  <Controller
-                    name={`types.${index}.stock`}
-                    control={control}
-                    defaultValue={item.stock}
-                    render={({ field }) => (
-                      <TextInput
-                        value={field.value || ""}
-                        type="number"
-                        className="w-1/2 pb-2 rounded"
-                        placeholder="Ingrese Stock"
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    )}
-                  />
-                  <label className="pl-2 w-24">Precio:</label>
-                  <Controller
-                    name={`types.${index}.price`}
-                    control={control}
-                    defaultValue={item.price}
-                    render={({ field }) => (
-                      <TextInput
-                        value={field.value || ""}
-                        type="number"
-                        className="w-1/2 pb-2 rounded"
-                        placeholder="Ingrese el precio"
-                        onChange={(e) => field.onChange(e.target.value)}
-                        required
-                      />
-                    )}
-                  />
-                  <button
-                    type="button"
-                    className="ml-2 p-1 mb-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    onClick={() => remove(index)}
-                  >
-                    <MinusIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                <MinusIcon className="h-5 w-5" />
+              </Button>
+            </div>
+          ))}
         </div>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving && <Spinner size="sm" className="mr-2" color="white" />}
-          <span>Guardar</span>
+
+        <Button 
+          type="submit" 
+          color="primary"
+          isLoading={isSaving}
+          className="w-full"
+        >
+          Guardar
         </Button>
       </div>
     </form>

@@ -1,6 +1,6 @@
 // generate a component use react-hook-form
 import { CategoryRepository } from "@/data/categories.repository";
-import { Button, Spinner, TextInput } from "flowbite-react";
+import { Button, Input } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
@@ -58,31 +58,31 @@ export function FormCategory({
   };
 
   return (
-    <form className="dark" onSubmit={handleSubmit(saveCategory)}>
-      <div className="flex flex-col space-y-2">
-        <div className="mb-2 block text-white">
-          <label htmlFor="name">Nombre</label>
-        </div>
+    <form onSubmit={handleSubmit(saveCategory)}>
+      <div className="flex flex-col gap-4">
         <Controller
           name="name"
           control={control}
           defaultValue={name}
           render={({ field }) => (
-            <TextInput
-              value={field.value || ""}
+            <Input
+              {...field}
+              label="Nombre"
               type="text"
-              className="w-full pb-2 rounded"
               placeholder="Ingrese nombre de la categoría"
-              color="gray"
+              variant="bordered"
               ref={emailInputRef}
-              onChange={(e) => field.onChange(e.target.value)}
-              required
+              isRequired
             />
           )}
         />
-        <Button type="submit" disabled={isSaving}>
-          {isSaving && <Spinner size="sm" className="mr-2" color="white" />}
-          <span>Guardar</span>
+        <Button 
+          type="submit" 
+          color="primary"
+          isLoading={isSaving}
+          className="w-full"
+        >
+          Guardar
         </Button>
       </div>
     </form>

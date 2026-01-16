@@ -1,13 +1,14 @@
 "use client";
+
 import {
   ChartPieIcon,
   WrenchScrewdriverIcon,
   ChevronDownIcon,
   ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/solid";
+import { Accordion, AccordionItem } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 
 interface ISidebarProps {
   toggleOpen?: boolean;
@@ -15,21 +16,20 @@ interface ISidebarProps {
 
 const naviItems = [
   {
-    icon: <ChartPieIcon className="w-6 h-6 text-gray-400" />,
+    icon: ChartPieIcon,
     name: "Dashboard",
     url: "/admin",
   },
   {
-    icon: <ClipboardDocumentCheckIcon className="w-6 h-6 text-gray-400" />,
+    icon: ClipboardDocumentCheckIcon,
     name: "Cotizador",
     url: "/admin/quoter",
   },
   {
-    icon: <WrenchScrewdriverIcon className="w-6 h-6 text-gray-400" />,
+    icon: WrenchScrewdriverIcon,
     name: "Mantenedores",
     url: "#",
     insider: true,
-    showChildren: false,
     children: [
       {
         name: "Productos",
@@ -44,12 +44,7 @@ const naviItems = [
 ];
 
 export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
-  const [navigation, setNavigation] = useState(naviItems);
-  const path = usePathname();
-  const toggleChildMenu = (index: number) => {
-    navigation[index].showChildren = !navigation[index].showChildren;
-    setNavigation([...navigation]);
-  };
+  const pathname = usePathname();
 
   return (
     <>
@@ -57,82 +52,98 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
         id="sidebar"
         className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden ${
           toggleOpen ? "w-64" : "w-16"
-        } h-full pt-16 font-normal duration-75 lg:flex transition-width`}
+        } h-full pt-16 font-normal duration-200 lg:flex transition-all border-r border-divider`}
         aria-label="Sidebar"
       >
-        <div className="relative flex flex-col flex-1 min-h-0 pt-0 border-r bg-gray-800 border-gray-700 transition-all duration-300 ease-in-out">
+        <div className="relative flex flex-col flex-1 min-h-0 pt-0 bg-content1 transition-all duration-200 ease-in-out">
           <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
-            <div className="flex-1 px-3 space-y-1 bg-gray-800 divide-gray-700">
-              <ul className="pb-2 space-y-2">
-                {navigation.map((item, index) => {
-                  if (item.insider) {
-                    return (
-                      <li key={index}>
-                        <button
-                          onClick={() => toggleChildMenu(index)}
-                          className="flex items-center w-full p-2 text-base transition duration-75 rounded-lg group text-gray-200 hover:bg-gray-700"
-                        >
-                          {item.icon}
-                          {toggleOpen && (
-                            <span className="ml-3">{item.name}</span>
-                          )}
-                          {toggleOpen && (
-                            <ChevronDownIcon className="w-4 h-4 ml-auto text-gray-300 group-hover:text-gray-200" />
-                          )}
-                        </button>
-                        <ul
-                          key={`sidebar-second-level-${index}`}
-                          className={`${
-                            item.showChildren ||
-                            item.children?.some((child) => child.url === path)
-                              ? "max-h-auto block"
-                              : "hidden max-h-0"
-                          } py-2 space-y-2 transition-all duration-300 ease-in-out`}
-                        >
-                          {item.children?.map((child, index) => (
-                            <li key={index}>
-                              <Link
-                                href={child.url}
-                                className={`flex pl-11 items-center p-2 text-base rounded-lg group text-gray-200 hover:bg-gray-700 ${
-                                  child.url === path ? "bg-gray-700" : ""
-                                }`}
-                              >
-                                {toggleOpen && (
-                                  <span className="ml-3">{child.name}</span>
-                                )}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
+            <nav className="flex-1 px-3 space-y-1">
+              <ul className="pb-2 space-y-1">
+                {naviItems.map((item, index) => {
+                  if (item.insider && item.children) {
+                    const isChildActive = item.children.some(
+                      (child) => child.url === pathname
                     );
-                  } else {
+
                     return (
                       <li key={index}>
-                        <Link
-                          href={item.url}
-                          className={`flex items-center p-2 text-base rounded-lg group text-gray-200 hover:bg-gray-700 ${
-                            item.url === path ? "bg-gray-700" : ""
-                          }`}
-                        >
-                          {item.icon}
-                          {toggleOpen && (
-                            <span className="ml-3">{item.name}</span>
-                          )}
-                        </Link>
+                        {toggleOpen ? (
+                          <Accordion 
+                            className="px-0"
+                            defaultExpandedKeys={isChildActive ? [index.toString()] : []}
+                          >
+                            <AccordionItem
+                              key={index.toString()}
+                              aria-label={item.name}
+                              title={
+                                <div className="flex items-center gap-3">
+                                  <item.icon className="w-5 h-5 text-default-500" />
+                                  <span className="text-sm font-medium">
+                                    {item.name}
+                                  </span>
+                                </div>
+                              }
+                              indicator={<ChevronDownIcon className="w-4 h-4" />}
+                              classNames={{
+                                trigger: "py-2 hover:bg-default-100 rounded-lg transition-colors",
+                                title: "text-default-700",
+                              }}
+                            >
+                              <ul className="space-y-1 ml-8">
+                                {item.children.map((child, childIndex) => (
+                                  <li key={childIndex}>
+                                    <Link
+                                      href={child.url}
+                                      className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                                        child.url === pathname
+                                          ? "bg-primary text-primary-foreground font-medium"
+                                          : "text-default-600 hover:bg-default-100 hover:text-default-900"
+                                      }`}
+                                    >
+                                      {child.name}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </AccordionItem>
+                          </Accordion>
+                        ) : (
+                          <button
+                            className="flex items-center justify-center w-full p-2 rounded-lg hover:bg-default-100 transition-colors"
+                            title={item.name}
+                          >
+                            <item.icon className="w-5 h-5 text-default-500" />
+                          </button>
+                        )}
                       </li>
                     );
                   }
+
+                  return (
+                    <li key={index}>
+                      <Link
+                        href={item.url}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                          item.url === pathname
+                            ? "bg-primary text-primary-foreground font-medium"
+                            : "text-default-700 hover:bg-default-100"
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        {toggleOpen && (
+                          <span className="text-sm font-medium">
+                            {item.name}
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  );
                 })}
               </ul>
-            </div>
+            </nav>
           </div>
         </div>
       </aside>
-      <div
-        className="fixed inset-0 z-10 hidden bg-gray-900/90"
-        id="sidebarBackdrop"
-      ></div>
     </>
   );
 }

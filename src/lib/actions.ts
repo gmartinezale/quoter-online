@@ -1,26 +1,83 @@
 "use server";
-import { signIn, signOut } from "@/auth";
+
+import { z } from "zod";
+import { connectDB } from "@/lib/mongo";
+import User from "@/models/user";
+import { createSession, deleteSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email." }).trim(),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters long" })
+    .trim(),
+});
+
+export type FormState =
+  | {
+      errors?: {
+        email?: string[];
+        password?: string[];
+      };
+      message?: string;
+    }
+  | undefined;
 
 export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData,
-) {
-  try {
-    await signIn("credentials", Object.fromEntries(formData));
-  } catch (error) {
-    if ((error as Error).message.includes("CredentialsSignin")) {
-      return "CredentialSignin";
-    }
-    throw error;
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  // 1. Validate form fields
+  const validatedFields = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  // If any form fields are invalid, return early
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
   }
+
+  // 2. Check user credentials
+  const { email, password } = validatedFields.data;
+
+  try {
+    await connectDB();
+    console.log('fields', email);
+    const users = await User.find({});
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return {
+        message: "Invalid credentials.",
+      };
+    }
+
+    const isValid = await user.validatePassword(password);
+    if (!isValid) {
+      return {
+        message: "Invalid credentials.",
+      };
+    }
+
+    // 3. Create user session
+    await createSession(user._id.toString(), user.email);
+
+    // 4. Redirect user
+  } catch (error) {
+    console.error("Login error:", error);
+    return {
+      message: "An error occurred while logging in.",
+    };
+  }
+
+  redirect("/admin");
 }
 
 export async function logout() {
-  try {
-    await signOut({
-      redirect: false,
-    });
-  } catch (error) {
-    console.error("Error al cerrar la sesión:", error);
-  }
+  await deleteSession();
+  redirect("/login");
 }

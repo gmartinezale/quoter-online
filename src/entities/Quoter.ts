@@ -1,21 +1,28 @@
 import { CategoryDoc } from "./Category";
 import { ProductDoc } from "./Product";
-import { TypeDoc } from "./Type";
 
+// Extra product added to quotation
 export type ExtraProductQuoter = {
   description: string;
   price: number;
   amount: number;
 };
 
-export type ProductsQuoter = {
-  type: string | ProductDoc;
-  amount: number;
+export type ProductPrice = {
+  description: string;
   price: number;
-  description: string | TypeDoc;
+};
+
+// Product item in quotation with selected type and finish
+export type ProductsQuoter = {
+  product: string | ProductDoc; // Reference to the product
+  productType?: ProductPrice; // ID of the selected type from product.types
+  productFinish?: ProductPrice; // ID of the selected finish from product.finishes
+  amount: number;
+  price: number; // Calculated price (base + type + finish)
   isFinished: boolean;
   category: string | CategoryDoc;
-  extras: ExtraProductQuoter[];
+  extras: ExtraProductQuoter[]; // Selected extras from product.extras
 };
 
 export type Quoter = {
