@@ -1,4 +1,3 @@
-import { Category } from "./Category";
 
 // Product type with description and price
 export type ProductType = {
@@ -34,7 +33,6 @@ export type Product = {
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
-  category: Category;
 };
 
 // Simplified product document for references

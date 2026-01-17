@@ -14,7 +14,6 @@ import Link from "next/link";
 import { ModalData } from "@/types";
 import { FormProduct } from "../Modal/Product/form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
-import { Category } from "@/entities/Category";
 import formatCurrency from "@/utils/formatCurrency";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
@@ -64,11 +63,7 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
 
   const openProductModal = (product?: Product) => {
     setShowModal(true);
-    if (product || categoryId) {
-      let productCategoryId = categoryId;
-      if (!productCategoryId) {
-        productCategoryId = product?.category._id;
-      }
+    if (product) {
       setModalData({
         title: "Editar producto",
         size: "3xl",
@@ -77,7 +72,6 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
             closeProductFormModal={closeProductFormModal}
             id={product?._id}
             name={product?.name}
-            category={productCategoryId}
           />
         ),
       });
@@ -114,28 +108,34 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
         title: `Detalles - ${product.name}`,
         size: "3xl",
         content: (
-          <div className="flex flex-col gap-6 text-white p-4">
-            {/* Base Price */}
-            <div className="border-b border-gray-700 pb-4">
-              <h3 className="text-lg font-semibold mb-2">Precio Base</h3>
-              <p className="text-xl">{formatCurrency(product.price)}</p>
+          <div className="flex flex-col gap-6 text-gray-900 dark:text-gray-100 p-4">
+            {/* Basic Information */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+              <h3 className="text-sm text-gray-500 dark:text-gray-400 mb-1">Precio Base</h3>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(product.price)}</p>
             </div>
 
             {/* Stock and Min Purchase */}
             {(product.stock !== undefined || product.minPurchase !== undefined) && (
-              <div className="border-b border-gray-700 pb-4">
-                <h3 className="text-lg font-semibold mb-2">Información de Inventario</h3>
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-3">Información de Inventario</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {product.stock !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-400">Stock disponible:</p>
-                      <p className="text-lg">{product.stock} unidades</p>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Stock disponible</p>
+                      <p className={`text-2xl font-bold ${
+                        product.stock === 0 ? "text-red-600 dark:text-red-400" : 
+                        product.stock < 10 ? "text-yellow-600 dark:text-yellow-400" : 
+                        "text-green-600 dark:text-green-400"
+                      }`}>
+                        {product.stock} unidades
+                      </p>
                     </div>
                   )}
                   {product.minPurchase !== undefined && (
-                    <div>
-                      <p className="text-sm text-gray-400">Compra mínima:</p>
-                      <p className="text-lg">{product.minPurchase} unidades</p>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Compra mínima</p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{product.minPurchase} unidades</p>
                     </div>
                   )}
                 </div>
@@ -144,13 +144,16 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
 
             {/* Types */}
             {product.types && product.types.length > 0 && (
-              <div className="border-b border-gray-700 pb-4">
-                <h3 className="text-lg font-semibold mb-3">Tipos</h3>
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  Tipos ({product.types.length})
+                </h3>
                 <div className="space-y-2">
                   {product.types.map((type, index) => (
-                    <div key={type._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
-                      <span>{type.description}</span>
-                      <span className="font-semibold">{formatCurrency(type.price)}</span>
+                    <div key={type._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="font-medium">{type.description}</span>
+                      <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(type.price)}</span>
                     </div>
                   ))}
                 </div>
@@ -159,13 +162,16 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
 
             {/* Finishes */}
             {product.finishes && product.finishes.length > 0 && (
-              <div className="border-b border-gray-700 pb-4">
-                <h3 className="text-lg font-semibold mb-3">Acabados</h3>
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                  Acabados ({product.finishes.length})
+                </h3>
                 <div className="space-y-2">
                   {product.finishes.map((finish, index) => (
-                    <div key={finish._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
-                      <span>{finish.description}</span>
-                      <span className="font-semibold">{formatCurrency(finish.price)}</span>
+                    <div key={finish._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="font-medium">{finish.description}</span>
+                      <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(finish.price)}</span>
                     </div>
                   ))}
                 </div>
@@ -174,13 +180,16 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
 
             {/* Extras */}
             {product.extras && product.extras.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Extras Opcionales</h3>
+              <div className="pb-2">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  Extras Opcionales ({product.extras.length})
+                </h3>
                 <div className="space-y-2">
                   {product.extras.map((extra, index) => (
-                    <div key={extra._id || index} className="flex justify-between items-center bg-gray-800 p-3 rounded">
-                      <span>{extra.description}</span>
-                      <span className="font-semibold">{formatCurrency(extra.price)}</span>
+                    <div key={extra._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <span className="font-medium">{extra.description}</span>
+                      <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(extra.price)}</span>
                     </div>
                   ))}
                 </div>
@@ -191,7 +200,12 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
             {(!product.types || product.types.length === 0) && 
              (!product.finishes || product.finishes.length === 0) && 
              (!product.extras || product.extras.length === 0) && (
-              <p className="text-center text-gray-400">No hay detalles adicionales configurados</p>
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400 mb-2">No hay variaciones configuradas</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  Este producto solo utiliza el precio base
+                </p>
+              </div>
             )}
           </div>
         ),
@@ -212,75 +226,130 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
     {
       header: "Nombre",
       accessorKey: "name",
+      size: 200,
     },
     {
       header: "Precio Base",
       accessorKey: "price",
       Cell: (row) => {
         const price = row.cell.getValue<number>();
-        return formatCurrency(price);
+        return (
+          <span className="font-semibold text-green-400">
+            {formatCurrency(price)}
+          </span>
+        );
       },
+      size: 120,
+    },
+    {
+      header: "Stock",
+      accessorKey: "stock",
+      Cell: (row) => {
+        const stock = row.cell.getValue<number>();
+        if (stock === undefined) return <span className="text-gray-500">-</span>;
+        
+        const stockClass = stock === 0 ? "text-red-400" : stock < 10 ? "text-yellow-400" : "text-green-400";
+        return <span className={stockClass}>{stock} uds</span>;
+      },
+      size: 100,
+    },
+    {
+      header: "Variaciones",
+      accessorKey: "_id",
+      Cell: (row) => {
+        const product = row.row.original as Product;
+        const typesCount = product.types?.length || 0;
+        const finishesCount = product.finishes?.length || 0;
+        const extrasCount = product.extras?.length || 0;
+        const total = typesCount + finishesCount + extrasCount;
+        
+        if (total === 0) {
+          return <span className="text-gray-500">Sin variaciones</span>;
+        }
+        
+        return (
+          <div className="flex gap-1 text-xs">
+            {typesCount > 0 && (
+              <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400">
+                {typesCount} tipos
+              </span>
+            )}
+            {finishesCount > 0 && (
+              <span className="px-2 py-1 rounded bg-orange-500/20 text-orange-400">
+                {finishesCount} acabados
+              </span>
+            )}
+            {extrasCount > 0 && (
+              <span className="px-2 py-1 rounded bg-cyan-500/20 text-cyan-400">
+                {extrasCount} extras
+              </span>
+            )}
+          </div>
+        );
+      },
+      size: 250,
     },
     {
       header: "Detalles",
       accessorKey: "_id",
+      enableSorting: false,
+      enableColumnFilter: false,
       Cell: (row) => {
         const product = row.row.original as Product;
         return (
           <MagnifyingGlassIcon
-            className="w-5 h-5 text-white cursor-pointer hover:text-blue-400"
+            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-blue-400 transition-colors"
             onClick={() => showModalDetails(product)}
           />
         );
       },
-    },
-    {
-      header: "Categoría",
-      accessorKey: "category",
-      filterFn: (row, id, filterValue) => {
-        const category = row.original.category as Category;
-        return category?.name.toLowerCase().includes(filterValue.toLowerCase());
-      },
-      Cell: (row) => {
-        const category = row.cell.getValue<Category>();
-        return category?.name;
-      },
+      size: 80,
     },
     {
       header: "Acciones",
       accessorKey: "_id",
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      enableSorting: false,
+      enableColumnFilter: false,
       Cell: (row) => {
         const product = row.row.original as Product;
         return (
           <div className="flex space-x-2">
             <button
-              className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               onClick={() => openProductModal(product)}
+              title="Editar producto"
             >
-              <PencilIcon className="w-4 h-4 text-white" />
+              <PencilIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </button>
             <button
-              className="p-2 rounded-full bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               onClick={() => deleteProduct(product._id)}
+              title="Eliminar producto"
             >
-              <XMarkIcon className="w-4 h-4 text-white" />
+              <XMarkIcon className="w-4 h-4 text-red-600 dark:text-red-400" />
             </button>
           </div>
         );
       },
+      size: 120,
     },
   ];
 
   return (
-    <div className="px-4 pt-2">
+    <div className="w-full">
       {!categoryId && (
-        <h1 className="text-xl text-white font-semibold">Productos</h1>
+        <h1 className="text-2xl text-gray-900 dark:text-white font-bold mb-6">Productos</h1>
       )}
       <div className="flex flex-col">
-        <div className="justify-between px-4 py-3">
+        <div className="justify-between mb-4">
           <div className="w-full pb-2 flex justify-end">
-            <Button color="primary" onPress={() => openProductModal()}>Agregar</Button>
+            <Button 
+              color="primary" 
+              onPress={() => openProductModal()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+            >
+              Agregar Producto
+            </Button>
           </div>
           <Table
             columns={columnsProduct}

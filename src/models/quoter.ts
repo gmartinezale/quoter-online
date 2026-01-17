@@ -1,6 +1,5 @@
 import { Document, Schema, model } from "mongoose";
 import "./product";
-import "./category";
 import { Product } from "@/entities/Product";
 import { Category } from "@/entities/Category";
 import { IProductPrice, ProductPriceSchema } from "@/interfaces/ProductInterface";
@@ -47,7 +46,6 @@ const QuoterSchema = new Schema<IQuoter>(
         productFinish: { type: [ProductPriceSchema], default: [] }, // ID from product.finishes subdocument
         amount: { type: Number, required: true, min: 1 },
         price: { type: Number, required: true, min: 0 },
-        category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
         isFinished: { type: Boolean, default: false },
         extras: [
           {

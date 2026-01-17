@@ -1,4 +1,3 @@
-import { CategoryDoc } from "./Category";
 import { ProductDoc } from "./Product";
 
 // Extra product added to quotation
@@ -21,7 +20,6 @@ export type ProductsQuoter = {
   amount: number;
   price: number; // Calculated price (base + type + finish)
   isFinished: boolean;
-  category: string | CategoryDoc;
   extras: ExtraProductQuoter[]; // Selected extras from product.extras
 };
 

@@ -33,11 +33,7 @@ const naviItems = [
     children: [
       {
         name: "Productos",
-        url: "/admin/categories",
-      },
-      {
-        name: "Stock",
-        url: "/admin/types",
+        url: "/admin/products",
       },
     ],
   },
@@ -52,10 +48,10 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
         id="sidebar"
         className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden ${
           toggleOpen ? "w-64" : "w-16"
-        } h-full pt-16 font-normal duration-200 lg:flex transition-all border-r border-divider`}
+        } h-full pt-16 font-normal duration-200 lg:flex transition-all border-r border-gray-200 dark:border-gray-800`}
         aria-label="Sidebar"
       >
-        <div className="relative flex flex-col flex-1 min-h-0 pt-0 bg-content1 transition-all duration-200 ease-in-out">
+        <div className="relative flex flex-col flex-1 min-h-0 pt-0 bg-white dark:bg-[#232323] transition-all duration-200 ease-in-out">
           <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
             <nav className="flex-1 px-3 space-y-1">
               <ul className="pb-2 space-y-1">
@@ -85,8 +81,8 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
                               }
                               indicator={<ChevronDownIcon className="w-4 h-4" />}
                               classNames={{
-                                trigger: "py-2 hover:bg-default-100 rounded-lg transition-colors",
-                                title: "text-default-700",
+                                trigger: "py-2 hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-lg transition-colors",
+                                title: "text-gray-700 dark:text-gray-300",
                               }}
                             >
                               <ul className="space-y-1 ml-8">
@@ -96,8 +92,8 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
                                       href={child.url}
                                       className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                                         child.url === pathname
-                                          ? "bg-primary text-primary-foreground font-medium"
-                                          : "text-default-600 hover:bg-default-100 hover:text-default-900"
+                                          ? "bg-blue-600 text-white font-medium shadow-sm"
+                                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200"
                                       }`}
                                     >
                                       {child.name}
@@ -109,10 +105,10 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
                           </Accordion>
                         ) : (
                           <button
-                            className="flex items-center justify-center w-full p-2 rounded-lg hover:bg-default-100 transition-colors"
+                            className="flex items-center justify-center w-full p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
                             title={item.name}
                           >
-                            <item.icon className="w-5 h-5 text-default-500" />
+                            <item.icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                           </button>
                         )}
                       </li>
@@ -125,8 +121,8 @@ export default function Sidebar({ toggleOpen = true }: ISidebarProps) {
                         href={item.url}
                         className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                           item.url === pathname
-                            ? "bg-primary text-primary-foreground font-medium"
-                            : "text-default-700 hover:bg-default-100"
+                            ? "bg-blue-600 text-white font-medium shadow-sm"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                         }`}
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />

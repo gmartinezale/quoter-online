@@ -1,6 +1,4 @@
-import { Category } from "@/entities/Category";
 import { Document, Schema, model } from "mongoose";
-import "./category";
 import { IProductPrice, ProductPriceSchema } from "@/interfaces/ProductInterface";
 
 interface IProduct extends Document {
@@ -12,7 +10,6 @@ interface IProduct extends Document {
   stock?: number; // Optional stock quantity
   minPurchase?: number; // Optional minimum purchase quantity
   active: boolean;
-  category: string | Category;
 }
 
 // Main product schema
@@ -26,7 +23,6 @@ const ProductSchema = new Schema<IProduct>(
     stock: { type: Number, min: 0 },
     minPurchase: { type: Number, min: 1 },
     active: { type: Boolean, default: true },
-    category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
   },
   { timestamps: true },
 );

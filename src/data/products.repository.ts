@@ -18,6 +18,10 @@ export class ProductRepository {
     return this._service.get("/admin/products/api", query?.options);
   }
 
+  getProduct(id: string) {
+    return this._service.get(`/admin/products/api/${id}`);
+  }
+
   addProduct(body: any) {
     return this._service.post("/admin/products/api", body);
   }

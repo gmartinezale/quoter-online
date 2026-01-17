@@ -30,32 +30,35 @@ export default function Header({ setToggleOpen, toggleOpen }: IHeaderProps) {
   };
 
   return (
-    <nav className="fixed z-30 w-full border-b border-divider bg-content1 backdrop-blur-md">
+    <nav className="fixed z-30 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-[#232323]/95 backdrop-blur-xl shadow-sm dark:shadow-none">
       <div className="px-3 py-3 md:px-5 md:pl-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center justify-start gap-2">
+          <div className="flex items-center justify-start gap-3">
             <Button
               isIconOnly
               variant="light"
-              className="hidden sm:flex"
+              className="hidden sm:flex hover:bg-gray-100 dark:hover:bg-gray-800"
               onPress={toggleSidebar}
               aria-label="Toggle sidebar"
             >
-              <Bars3Icon className="w-5 h-5" />
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </Button>
             
             <Button
               isIconOnly
               variant="light"
-              className="md:hidden"
+              className="md:hidden hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle mobile sidebar"
             >
-              <Bars3Icon className="w-5 h-5" />
+              <Bars3Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </Button>
 
-            <a href="/admin/" className="flex items-center">
-              <span className="text-xl font-semibold whitespace-nowrap bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Admin Panel
+            <a href="/admin/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
+                <span className="text-white font-bold text-sm">Q</span>
+              </div>
+              <span className="text-xl font-bold whitespace-nowrap text-gray-900 dark:text-white">
+                Quoter Online
               </span>
             </a>
           </div>
@@ -65,13 +68,14 @@ export default function Header({ setToggleOpen, toggleOpen }: IHeaderProps) {
               <Button
                 isIconOnly
                 variant="light"
+                className="hover:bg-gray-100 dark:hover:bg-gray-800"
                 onPress={toggleTheme}
                 aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
               >
                 {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5" />
+                  <SunIcon className="w-5 h-5 text-yellow-500" />
                 ) : (
-                  <MoonIcon className="w-5 h-5" />
+                  <MoonIcon className="w-5 h-5 text-gray-600" />
                 )}
               </Button>
             )}
@@ -81,13 +85,13 @@ export default function Header({ setToggleOpen, toggleOpen }: IHeaderProps) {
                 type="submit"
                 isIconOnly
                 variant="light"
-                color="danger"
+                className="hover:bg-red-50 dark:hover:bg-red-950/30"
                 aria-label="Logout"
                 onPress={() => {
                   setTimeout(() => window.location.reload(), 1000);
                 }}
               >
-                <ArrowLeftOnRectangleIcon className="w-5 h-5" />
+                <ArrowLeftOnRectangleIcon className="w-5 h-5 text-red-500" />
               </Button>
             </form>
           </div>

@@ -8,7 +8,7 @@ import { Suspense } from "react";
 const getProducts = async () => {
   try {
     const cookiesStore = await cookies();
-    const token = cookiesStore.get("next-auth.session-token")?.value;
+    const token = cookiesStore.get("session")?.value;
     const repository = ProductRepository.instance(token);
     const { products } = await repository.getProducts();
     return products;
