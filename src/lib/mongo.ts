@@ -10,14 +10,19 @@ export const connectDB = async (): Promise<Connection> => {
   }
 
   try {
-    console.log("Conectando a la base de datos", MONGO_URI);
+    // Solo log en desarrollo, sin exponer URI
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Conectando a la base de datos...");
+    }
     const db = await mongoose.connect(MONGO_URI);
 
-    console.log("Conexión a la base de datos establecida");
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Conexión a la base de datos establecida");
+    }
     cachedDb = db.connection;
     return db.connection;
   } catch (error) {
-    console.error("Error al conectar a la base de datos:", error);
+    console.error("Error al conectar a la base de datos");
     throw error;
   }
 };

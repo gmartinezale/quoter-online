@@ -211,9 +211,10 @@ const Table = ({ columns, data, isLoading }: ITableProps) => {
         muiTableProps={{
           sx: {
             backgroundColor: tableTheme.baseBackgroundColor,
-            tableLayout: "fixed",
+            tableLayout: "auto",
           },
         }}
+        layoutMode="grid"
       />
     </div>
   );

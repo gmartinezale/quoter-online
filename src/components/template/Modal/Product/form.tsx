@@ -1,10 +1,10 @@
 // Product form component using react-hook-form
 import { ProductRepository } from "@/data/products.repository";
-import { Button, Input, Spinner, Tabs, Tab, Card, CardBody } from "@heroui/react";
+import { Button, Input, Spinner, Tabs, Tab, Card, CardBody, Accordion, AccordionItem } from "@heroui/react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm, Control, UseFormWatch } from "react-hook-form";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
-import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { MinusIcon, PlusIcon, TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 
 interface IFormProductProps {
   closeProductFormModal: (update: boolean) => void;
@@ -12,15 +12,268 @@ interface IFormProductProps {
   id?: string;
 }
 
+interface ProductPrice {
+  _id?: string;
+  description: string;
+  price: number;
+}
+
+interface ProductType {
+  _id?: string;
+  description: string;
+  price?: number;
+  finishes?: ProductPrice[];
+  extras?: ProductPrice[];
+}
+
 interface ProductFormData {
   id: string;
   name: string;
-  price: number;
   stock?: number;
   minPurchase?: number;
-  types: Array<{ _id?: string; description: string; price: number }>;
-  finishes: Array<{ _id?: string; description: string; price: number }>;
-  extras: Array<{ _id?: string; description: string; price: number }>;
+  types: ProductType[];
+  extras: ProductPrice[]; // Extras generales del producto
+}
+
+// Componente separado para manejar los field arrays anidados de cada tipo
+function TypeFieldsSection({ 
+  typeIndex, 
+  control,
+  watch,
+  removeType,
+  copyType 
+}: { 
+  typeIndex: number;
+  control: Control<ProductFormData>;
+  watch: UseFormWatch<ProductFormData>;
+  removeType: (index: number) => void;
+  copyType: (index: number) => void;
+}) {
+  const { fields: finishFields, append: appendFinish, remove: removeFinish } = useFieldArray({
+    control,
+    name: `types.${typeIndex}.finishes` as const,
+  });
+
+  const { fields: extraFields, append: appendExtra, remove: removeExtra } = useFieldArray({
+    control,
+    name: `types.${typeIndex}.extras` as const,
+  });
+
+  const hasFinishes = (watch(`types.${typeIndex}.finishes`) || []).length > 0;
+
+  return (
+    <div className="flex flex-col gap-4 p-2">
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          size="sm"
+          color="primary"
+          variant="light"
+          onPress={() => copyType(typeIndex)}
+          startContent={<DocumentDuplicateIcon className="h-4 w-4" />}
+        >
+          Copiar tipo
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          color="danger"
+          variant="light"
+          onPress={() => removeType(typeIndex)}
+          startContent={<TrashIcon className="h-4 w-4" />}
+        >
+          Eliminar este tipo
+        </Button>
+      </div>
+      
+      <Controller
+        name={`types.${typeIndex}.description`}
+        control={control}
+        rules={{ required: "La descripción es requerida" }}
+        render={({ field, fieldState }) => (
+          <Input
+            {...field}
+            label="Nombre del Tipo"
+            type="text"
+            placeholder="Ej: Talla S, Material Algodón"
+            variant="bordered"
+            isRequired
+            isInvalid={!!fieldState.error}
+            errorMessage={fieldState.error?.message}
+          />
+        )}
+      />
+
+      {!hasFinishes && (
+        <Controller
+          name={`types.${typeIndex}.price`}
+          control={control}
+          rules={{ 
+            min: { value: 0, message: "Debe ser mayor o igual a 0" }
+          }}
+          render={({ field, fieldState }) => (
+            <Input
+              {...field}
+              value={field.value?.toString() || ""}
+              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+              label="Precio (solo si no tiene acabados)"
+              type="number"
+              placeholder="0"
+              variant="bordered"
+              isInvalid={!!fieldState.error}
+              errorMessage={fieldState.error?.message}
+              description="Deja vacío si vas a agregar acabados"
+              startContent={<span className="text-default-400 text-small">$</span>}
+            />
+          )}
+        />
+      )}
+
+      {/* Finishes Section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Acabados / Sub-Tipos</p>
+            <Button
+              type="button"
+              size="sm"
+              color="warning"
+              variant="flat"
+              onPress={() => appendFinish({ description: "", price: 0 })}
+              startContent={<PlusIcon className="h-4 w-4" />}
+            >
+              Agregar Acabado
+            </Button>
+          </div>
+          {finishFields.map((finishField, finishIndex) => (
+            <div key={finishField.id} className="flex gap-2 items-end">
+              <Controller
+                name={`types.${typeIndex}.finishes.${finishIndex}.description`}
+                control={control}
+                rules={{ required: "Requerido" }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    label="Descripción"
+                    type="text"
+                    placeholder="Ej: Mate, Brillante"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                    isInvalid={!!fieldState.error}
+                    className="flex-1"
+                  />
+                )}
+              />
+              <Controller
+                name={`types.${typeIndex}.finishes.${finishIndex}.price`}
+                control={control}
+                rules={{ required: "Requerido", min: 0 }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    value={field.value?.toString() || ""}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    label="Precio"
+                    type="number"
+                    placeholder="0"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                    isInvalid={!!fieldState.error}
+                    className="w-32"
+                    startContent={<span className="text-default-400 text-small">$</span>}
+                  />
+                )}
+              />
+              <Button
+                type="button"
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={() => removeFinish(finishIndex)}
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Extras Section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Extras Opcionales</p>
+            <Button
+              type="button"
+              size="sm"
+              color="secondary"
+              variant="flat"
+              onPress={() => appendExtra({ description: "", price: 0 })}
+              startContent={<PlusIcon className="h-4 w-4" />}
+            >
+              Agregar Extra
+            </Button>
+          </div>
+          {extraFields.map((extraField, extraIndex) => (
+            <div key={extraField.id} className="flex gap-2 items-end">
+              <Controller
+                name={`types.${typeIndex}.extras.${extraIndex}.description`}
+                control={control}
+                rules={{ required: "Requerido" }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    label="Descripción"
+                    type="text"
+                    placeholder="Ej: Logo personalizado"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                    isInvalid={!!fieldState.error}
+                    className="flex-1"
+                  />
+                )}
+              />
+              <Controller
+                name={`types.${typeIndex}.extras.${extraIndex}.price`}
+                control={control}
+                rules={{ required: "Requerido", min: 0 }}
+                render={({ field, fieldState }) => (
+                  <Input
+                    {...field}
+                    value={field.value?.toString() || ""}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    label="Precio"
+                    type="number"
+                    placeholder="0"
+                    variant="bordered"
+                    size="sm"
+                    isRequired
+                    isInvalid={!!fieldState.error}
+                    className="w-32"
+                    startContent={<span className="text-default-400 text-small">$</span>}
+                  />
+                )}
+              />
+              <Button
+                type="button"
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="flat"
+                onPress={() => removeExtra(extraIndex)}
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function FormProduct({
@@ -34,11 +287,9 @@ export function FormProduct({
     defaultValues: {
       id: "",
       name: "",
-      price: 0,
       stock: undefined,
       minPurchase: undefined,
       types: [],
-      finishes: [],
       extras: [],
     },
     shouldUnregister: false,
@@ -49,11 +300,6 @@ export function FormProduct({
     name: "types",
   });
   
-  const { fields: finishesFields, append: appendFinish, remove: removeFinish } = useFieldArray({
-    control,
-    name: "finishes",
-  });
-  
   const { fields: extrasFields, append: appendExtra, remove: removeExtra } = useFieldArray({
     control,
     name: "extras",
@@ -62,6 +308,21 @@ export function FormProduct({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Función para copiar un tipo
+  const copyType = (index: number) => {
+    const typeToCopy = watch(`types.${index}`);
+    if (typeToCopy) {
+      // Crear una copia profunda del tipo
+      const copiedType = {
+        description: `${typeToCopy.description} (Copia)`,
+        price: typeToCopy.price,
+        finishes: typeToCopy.finishes ? [...typeToCopy.finishes.map(f => ({ ...f, _id: undefined }))] : [],
+        extras: typeToCopy.extras ? [...typeToCopy.extras.map(e => ({ ...e, _id: undefined }))] : [],
+      };
+      appendType(copiedType);
+    }
+  };
+
   const getProduct = async (productId: string) => {
     try {
       const repository = ProductRepository.instance();
@@ -69,11 +330,9 @@ export function FormProduct({
       if (product) {
         setValue("id", product._id || "");
         setValue("name", product.name);
-        setValue("price", product.price);
         setValue("stock", product.stock);
         setValue("minPurchase", product.minPurchase);
         setValue("types", product.types || []);
-        setValue("finishes", product.finishes || []);
         setValue("extras", product.extras || []);
       }
     } catch (error) {
@@ -158,34 +417,6 @@ export function FormProduct({
             )}
           />
 
-          <Controller
-            name="price"
-            control={control}
-            rules={{ 
-              required: "El precio base es requerido",
-              min: { value: 0, message: "El precio debe ser mayor o igual a 0" }
-            }}
-            render={({ field, fieldState }) => (
-              <Input
-                {...field}
-                value={field.value?.toString() || ""}
-                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                label="Precio Base"
-                type="number"
-                placeholder="0"
-                variant="bordered"
-                isRequired
-                isInvalid={!!fieldState.error}
-                errorMessage={fieldState.error?.message}
-                startContent={
-                  <div className="pointer-events-none flex items-center">
-                    <span className="text-default-400 text-small">$</span>
-                  </div>
-                }
-              />
-            )}
-          />
-
           <div className="grid grid-cols-2 gap-4">
             <Controller
               name="stock"
@@ -228,268 +459,142 @@ export function FormProduct({
         </CardBody>
       </Card>
 
-      {/* Product Variations */}
+      {/* Product Types with Nested Structure */}
       <Card className="bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700">
-        <CardBody>
-          <Tabs aria-label="Variaciones del producto" color="primary">
-            {/* Types Tab */}
-            <Tab key="types" title="Tipos">
-              <div className="flex flex-col gap-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Define los diferentes tipos de este producto (Ej: Tallas, Materiales)
-                  </p>
-                  <Button
-                    type="button"
-                    isIconOnly
-                    size="sm"
-                    color="success"
-                    variant="flat"
-                    onPress={() => appendType({ description: "", price: 0 })}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                  </Button>
-                </div>
+        <CardBody className="gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tipos de Producto</h3>
+            <Button
+              type="button"
+              size="sm"
+              color="success"
+              variant="flat"
+              onPress={() => appendType({ description: "", finishes: [], extras: [] })}
+              startContent={<PlusIcon className="h-4 w-4" />}
+            >
+              Agregar Tipo
+            </Button>
+          </div>
 
-                {typesFields.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
-                    No hay tipos configurados
-                  </p>
-                )}
+          {typesFields.length === 0 && (
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
+              No hay tipos configurados. Agrega al menos un tipo para tu producto.
+            </p>
+          )}
 
-                {typesFields.map((item, index) => (
-                  <div key={item.id} className="flex gap-2 items-end">
-                    <Controller
-                      name={`types.${index}.description`}
-                      control={control}
-                      rules={{ required: "La descripción es requerida" }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          label="Descripción"
-                          type="text"
-                          placeholder="Ej: Pequeño, Mediano, Grande"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="flex-1"
-                        />
-                      )}
-                    />
-                    <Controller
-                      name={`types.${index}.price`}
-                      control={control}
-                      rules={{ 
-                        required: "El precio es requerido",
-                        min: { value: 0, message: "Debe ser mayor o igual a 0" }
-                      }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          value={field.value?.toString() || ""}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          label="Precio"
-                          type="number"
-                          placeholder="0"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="w-32"
-                          startContent={<span className="text-default-400 text-small">$</span>}
-                        />
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      isIconOnly
+          <Accordion variant="splitted">
+            {typesFields.map((typeField, typeIndex) => (
+              <AccordionItem
+                key={typeField.id}
+                aria-label={`Tipo ${typeIndex + 1}`}
+                title={
+                  <span className="font-medium">
+                    {watch(`types.${typeIndex}.description`) || `Tipo ${typeIndex + 1}`}
+                  </span>
+                }
+                className="bg-gray-50 dark:bg-gray-800/50"
+              >
+                <TypeFieldsSection 
+                  typeIndex={typeIndex}
+                  control={control}
+                  watch={watch}
+                  removeType={removeType}
+                  copyType={copyType}
+                />
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardBody>
+      </Card>
+
+      {/* General Extras */}
+      <Card className="bg-white dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700">
+        <CardBody className="gap-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Extras Generales</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Estos extras aplican a todos los tipos del producto
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              color="secondary"
+              variant="flat"
+              onPress={() => appendExtra({ description: "", price: 0 })}
+              startContent={<PlusIcon className="h-4 w-4" />}
+            >
+              Agregar Extra
+            </Button>
+          </div>
+
+          {extrasFields.length === 0 && (
+            <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
+              No hay extras generales configurados
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {extrasFields.map((extraField, extraIndex) => (
+              <div key={extraField.id} className="flex gap-2 items-end">
+                <Controller
+                  name={`extras.${extraIndex}.description`}
+                  control={control}
+                  rules={{ required: "La descripción es requerida" }}
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      label="Descripción"
+                      type="text"
+                      placeholder="Ej: Empaque especial, Tarjeta de regalo"
+                      variant="bordered"
                       size="sm"
-                      color="danger"
-                      variant="flat"
-                      onPress={() => removeType(index)}
-                    >
-                      <MinusIcon className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </Tab>
-
-            {/* Finishes Tab */}
-            <Tab key="finishes" title="Acabados">
-              <div className="flex flex-col gap-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Define los acabados disponibles (Ej: Colores, Texturas)
-                  </p>
-                  <Button
-                    type="button"
-                    isIconOnly
-                    size="sm"
-                    color="success"
-                    variant="flat"
-                    onPress={() => appendFinish({ description: "", price: 0 })}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                {finishesFields.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
-                    No hay acabados configurados
-                  </p>
-                )}
-
-                {finishesFields.map((item, index) => (
-                  <div key={item.id} className="flex gap-2 items-end">
-                    <Controller
-                      name={`finishes.${index}.description`}
-                      control={control}
-                      rules={{ required: "La descripción es requerida" }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          label="Descripción"
-                          type="text"
-                          placeholder="Ej: Mate, Brillante, Metalizado"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="flex-1"
-                        />
-                      )}
+                      isRequired
+                      isInvalid={!!fieldState.error}
+                      errorMessage={fieldState.error?.message}
+                      className="flex-1"
                     />
-                    <Controller
-                      name={`finishes.${index}.price`}
-                      control={control}
-                      rules={{ 
-                        required: "El precio es requerido",
-                        min: { value: 0, message: "Debe ser mayor o igual a 0" }
-                      }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          value={field.value?.toString() || ""}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          label="Precio"
-                          type="number"
-                          placeholder="0"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="w-32"
-                          startContent={<span className="text-default-400 text-small">$</span>}
-                        />
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      isIconOnly
+                  )}
+                />
+                <Controller
+                  name={`extras.${extraIndex}.price`}
+                  control={control}
+                  rules={{ 
+                    required: "El precio es requerido",
+                    min: { value: 0, message: "Debe ser mayor o igual a 0" }
+                  }}
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      value={field.value?.toString() || ""}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      label="Precio"
+                      type="number"
+                      placeholder="0"
+                      variant="bordered"
                       size="sm"
-                      color="danger"
-                      variant="flat"
-                      onPress={() => removeFinish(index)}
-                    >
-                      <MinusIcon className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </Tab>
-
-            {/* Extras Tab */}
-            <Tab key="extras" title="Extras">
-              <div className="flex flex-col gap-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Extras opcionales que se pueden agregar (Ej: Personalización, Empaque especial)
-                  </p>
-                  <Button
-                    type="button"
-                    isIconOnly
-                    size="sm"
-                    color="success"
-                    variant="flat"
-                    onPress={() => appendExtra({ description: "", price: 0 })}
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                {extrasFields.length === 0 && (
-                  <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4">
-                    No hay extras configurados
-                  </p>
-                )}
-
-                {extrasFields.map((item, index) => (
-                  <div key={item.id} className="flex gap-2 items-end">
-                    <Controller
-                      name={`extras.${index}.description`}
-                      control={control}
-                      rules={{ required: "La descripción es requerida" }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          label="Descripción"
-                          type="text"
-                          placeholder="Ej: Logo personalizado, Caja de regalo"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="flex-1"
-                        />
-                      )}
+                      isRequired
+                      isInvalid={!!fieldState.error}
+                      errorMessage={fieldState.error?.message}
+                      className="w-32"
+                      startContent={<span className="text-default-400 text-small">$</span>}
                     />
-                    <Controller
-                      name={`extras.${index}.price`}
-                      control={control}
-                      rules={{ 
-                        required: "El precio es requerido",
-                        min: { value: 0, message: "Debe ser mayor o igual a 0" }
-                      }}
-                      render={({ field, fieldState }) => (
-                        <Input
-                          {...field}
-                          value={field.value?.toString() || ""}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          label="Precio"
-                          type="number"
-                          placeholder="0"
-                          variant="bordered"
-                          size="sm"
-                          isRequired
-                          isInvalid={!!fieldState.error}
-                          errorMessage={fieldState.error?.message}
-                          className="w-32"
-                          startContent={<span className="text-default-400 text-small">$</span>}
-                        />
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      isIconOnly
-                      size="sm"
-                      color="danger"
-                      variant="flat"
-                      onPress={() => removeExtra(index)}
-                    >
-                      <MinusIcon className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
+                  )}
+                />
+                <Button
+                  type="button"
+                  isIconOnly
+                  size="sm"
+                  color="danger"
+                  variant="flat"
+                  onPress={() => removeExtra(extraIndex)}
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </Button>
               </div>
-            </Tab>
-          </Tabs>
+            ))}
+          </div>
         </CardBody>
       </Card>
 

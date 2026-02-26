@@ -15,7 +15,7 @@ export async function encrypt(payload: SessionPayload) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("24h") // Reducido de 7d a 24h por seguridad
     .sign(encodedKey);
 }
 
@@ -26,21 +26,24 @@ export async function decrypt(session: string | undefined = "") {
     });
     return payload as SessionPayload;
   } catch (error) {
-    console.log("Failed to verify session");
+    // No exponer detalles del error en producción
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Failed to verify session");
+    }
     return null;
   }
 }
 
 export async function createSession(userId: string, email: string) {
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
   const session = await encrypt({ userId, email, expiresAt });
   const cookieStore = await cookies();
 
   cookieStore.set("session", session, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Siempre seguro (Vercel usa HTTPS)
     expires: expiresAt,
-    sameSite: "lax",
+    sameSite: "strict", // Más restrictivo que "lax"
     path: "/",
   });
 }
@@ -54,13 +57,13 @@ export async function updateSession() {
     return null;
   }
 
-  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
   
   cookieStore.set("session", session, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     expires: expires,
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
   });
 }

@@ -109,12 +109,6 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
         size: "3xl",
         content: (
           <div className="flex flex-col gap-6 text-gray-900 dark:text-gray-100 p-4">
-            {/* Basic Information */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="text-sm text-gray-500 dark:text-gray-400 mb-1">Precio Base</h3>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(product.price)}</p>
-            </div>
-
             {/* Stock and Min Purchase */}
             {(product.stock !== undefined || product.minPurchase !== undefined) && (
               <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
@@ -142,52 +136,81 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
               </div>
             )}
 
-            {/* Types */}
+            {/* Types with Nested Finishes and Extras */}
             {product.types && product.types.length > 0 && (
-              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+              <div className="pb-4">
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                   Tipos ({product.types.length})
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {product.types.map((type, index) => (
-                    <div key={type._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      <span className="font-medium">{type.description}</span>
-                      <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(type.price)}</span>
+                    <div key={`type-${type._id || index}-${index}`} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-lg">{type.description}</span>
+                        {type.price !== undefined && (
+                          <span className="font-bold text-green-600 dark:text-green-400 text-lg">
+                            {formatCurrency(type.price)}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Finishes dentro del tipo */}
+                      {type.finishes && type.finishes.length > 0 && (
+                        <div className="mt-3 pl-4 border-l-2 border-orange-500">
+                          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                            Acabados ({type.finishes.length})
+                          </h4>
+                          <div className="space-y-1">
+                            {type.finishes.map((finish, fIndex) => (
+                              <div key={`finish-${finish._id || fIndex}-${index}-${fIndex}`} className="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                <span className="text-sm">{finish.description}</span>
+                                <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                  {formatCurrency(finish.price)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Extras dentro del tipo */}
+                      {type.extras && type.extras.length > 0 && (
+                        <div className="mt-3 pl-4 border-l-2 border-cyan-500">
+                          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                            Extras ({type.extras.length})
+                          </h4>
+                          <div className="space-y-1">
+                            {type.extras.map((extra, eIndex) => (
+                              <div key={`type-extra-${extra._id || eIndex}-${index}-${eIndex}`} className="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                <span className="text-sm">{extra.description}</span>
+                                <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                  {formatCurrency(extra.price)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Finishes */}
-            {product.finishes && product.finishes.length > 0 && (
-              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  Acabados ({product.finishes.length})
-                </h3>
-                <div className="space-y-2">
-                  {product.finishes.map((finish, index) => (
-                    <div key={finish._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      <span className="font-medium">{finish.description}</span>
-                      <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(finish.price)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Extras */}
+            {/* General Extras */}
             {product.extras && product.extras.length > 0 && (
-              <div className="pb-2">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-                  Extras Opcionales ({product.extras.length})
+                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  Extras Generales ({product.extras.length})
                 </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Aplican a todos los tipos del producto
+                </p>
                 <div className="space-y-2">
                   {product.extras.map((extra, index) => (
-                    <div key={extra._id || index} className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <div key={`general-extra-${extra._id || index}-${index}`} className="flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
                       <span className="font-medium">{extra.description}</span>
                       <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(extra.price)}</span>
                     </div>
@@ -197,13 +220,11 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
             )}
 
             {/* Empty state */}
-            {(!product.types || product.types.length === 0) && 
-             (!product.finishes || product.finishes.length === 0) && 
-             (!product.extras || product.extras.length === 0) && (
+            {(!product.types || product.types.length === 0) && (
               <div className="text-center py-8">
-                <p className="text-gray-500 dark:text-gray-400 mb-2">No hay variaciones configuradas</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-2">No hay tipos configurados</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">
-                  Este producto solo utiliza el precio base
+                  Este producto no tiene variaciones
                 </p>
               </div>
             )}
@@ -227,19 +248,7 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
       header: "Nombre",
       accessorKey: "name",
       size: 200,
-    },
-    {
-      header: "Precio Base",
-      accessorKey: "price",
-      Cell: (row) => {
-        const price = row.cell.getValue<number>();
-        return (
-          <span className="font-semibold text-green-400">
-            {formatCurrency(price)}
-          </span>
-        );
-      },
-      size: 120,
+      minSize: 150,
     },
     {
       header: "Stock",
@@ -255,43 +264,49 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
     },
     {
       header: "Variaciones",
-      accessorKey: "_id",
+      id: "variaciones",
+      size: 350,
+      minSize: 280,
       Cell: (row) => {
         const product = row.row.original as Product;
-        const typesCount = product.types?.length || 0;
-        const finishesCount = product.finishes?.length || 0;
-        const extrasCount = product.extras?.length || 0;
-        const total = typesCount + finishesCount + extrasCount;
+        const types = product.types || [];
+        const generalExtras = product.extras || [];
         
-        if (total === 0) {
-          return <span className="text-gray-500">Sin variaciones</span>;
+        if (types.length === 0) {
+          return <span className="text-gray-500">Sin tipos</span>;
         }
         
+        // Contar acabados y extras dentro de todos los tipos
+        const totalFinishes = types.reduce((sum, type) => sum + (type.finishes?.length || 0), 0);
+        const totalTypeExtras = types.reduce((sum, type) => sum + (type.extras?.length || 0), 0);
+        
         return (
-          <div className="flex gap-1 text-xs">
-            {typesCount > 0 && (
-              <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400">
-                {typesCount} tipos
-              </span>
-            )}
-            {finishesCount > 0 && (
+          <div className="flex gap-1 text-xs flex-wrap">
+            <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400">
+              {types.length} {types.length === 1 ? "tipo" : "tipos"}
+            </span>
+            {totalFinishes > 0 && (
               <span className="px-2 py-1 rounded bg-orange-500/20 text-orange-400">
-                {finishesCount} acabados
+                {totalFinishes} {totalFinishes === 1 ? "acabado" : "acabados"}
               </span>
             )}
-            {extrasCount > 0 && (
+            {totalTypeExtras > 0 && (
               <span className="px-2 py-1 rounded bg-cyan-500/20 text-cyan-400">
-                {extrasCount} extras
+                {totalTypeExtras} extra{totalTypeExtras === 1 ? "" : "s"} por tipo
+              </span>
+            )}
+            {generalExtras.length > 0 && (
+              <span className="px-2 py-1 rounded bg-indigo-500/20 text-indigo-400">
+                {generalExtras.length} extra{generalExtras.length === 1 ? "" : "s"} general{generalExtras.length === 1 ? "" : "es"}
               </span>
             )}
           </div>
         );
       },
-      size: 250,
     },
     {
       header: "Detalles",
-      accessorKey: "_id",
+      id: "detalles",
       enableSorting: false,
       enableColumnFilter: false,
       Cell: (row) => {
@@ -307,7 +322,7 @@ const ProductTable = ({ initialProducts, categoryId }: IProductTableProps) => {
     },
     {
       header: "Acciones",
-      accessorKey: "_id",
+      id: "acciones",
       enableSorting: false,
       enableColumnFilter: false,
       Cell: (row) => {

@@ -1,25 +1,24 @@
 "use client";
-import { Category } from "@/entities/Category";
-import { Product, ProductExtra } from "@/entities/Product";
-import { ProductsQuoter } from "@/entities/Quoter";
+import { Product, ProductPrice } from "@/entities/Product";
+import { ProductsQuoter, CustomProduct } from "@/entities/Quoter";
 import { useContext, useEffect, useState } from "react";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Controller, useForm } from "react-hook-form";
 import { Button, Input, DatePicker, Spinner } from "@heroui/react";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { QuoterRepository } from "@/data/quoter.repository";
 import { ProductForm } from "./components/ProductForm";
 import { ExtraProducts } from "./components/ExtraProducts";
+import { CustomProductForm } from "./components/CustomProductForm";
 import { TotalAmount } from "./components/TotalAmount";
+import formatCurrency from "@/utils/formatCurrency";
 
 interface ICreateQuoterProps {
-  initialCategories: Category[];
+  initialProducts: Product[];
 }
 
-/* TODO: change model product, independent collection price */
-
 export default function CreateQuoter({
-  initialCategories,
+  initialProducts,
 }: ICreateQuoterProps) {
   const { showToast } = useContext(ToastContext);
   const { control, handleSubmit, reset } = useForm({
@@ -27,40 +26,33 @@ export default function CreateQuoter({
       totalAmount: 0,
       artist: "",
       dateLimit: "",
-      products: [
-        {
-          amount: 0,
-          price: 0,
-          description: "",
-          product: "",
-          category: "",
-          type: "",
-          extras: [] as any,
-        },
-      ],
+      discount: 0,
     },
   });
 
-  const [categories] = useState<Category[]>(initialCategories);
-  const [filterProducts, setFilterProducts] = useState<
-    Record<number, Product[]>
+  const [products] = useState<Product[]>(initialProducts);
+  const [availableExtras, setAvailableExtras] = useState<
+    Record<number, ProductPrice[]>
   >({});
+  const [discount, setDiscount] = useState<number>(0);
+  const [subtotal, setSubtotal] = useState<number>(0);
   const [totalCalculate, setTotalCalculate] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [productQuoters, setProductQuoters] = useState<ProductsQuoter[]>([
     {
       amount: 0,
       price: 0,
-      category: "",
       isFinished: false,
       extras: [],
-      product: ""
+      product: "",
+      productType: { description: "", price: 0 },
     },
   ]);
+  const [customProducts, setCustomProducts] = useState<CustomProduct[]>([]);
 
   useEffect(() => {
-    if (productQuoters.length === 0) return;
-    const total = productQuoters.reduce((acc, item) => {
+    // Calculate subtotal from catalog products
+    const catalogTotal = productQuoters.reduce((acc, item) => {
       if (!item) return acc;
       const price = item.price ?? 0;
       const amount = item.amount ?? 0;
@@ -72,15 +64,20 @@ export default function CreateQuoter({
       }
       return acc + price * amount + totalExtras;
     }, 0);
-    setTotalCalculate(total);
-  }, [productQuoters]);
 
-  const getProduct = (productId: string, index: number) => {
-    const product = filterProducts[index]?.find(
-      (product) => product._id === productId,
-    );
-    return product?.name ?? "";
-  };
+    // Calculate subtotal from custom products
+    const customTotal = customProducts.reduce((acc, item) => {
+      return acc + (item.price * item.amount);
+    }, 0);
+
+    const calculatedSubtotal = catalogTotal + customTotal;
+    setSubtotal(calculatedSubtotal);
+
+    // Apply discount
+    const discountAmount = (calculatedSubtotal * discount) / 100;
+    const total = calculatedSubtotal - discountAmount;
+    setTotalCalculate(total);
+  }, [productQuoters, customProducts, discount]);
 
   const saveQuoter = async (data: any) => {
     try {
@@ -90,6 +87,8 @@ export default function CreateQuoter({
       payload.artist = data.artist;
       payload.dateLimit = data.dateLimit;
       payload.products = productQuoters;
+      payload.customProducts = customProducts;
+      payload.discount = discount;
       const repository = QuoterRepository.instance();
       const { success } = await repository.saveQuoter(payload);
       if (!success) {
@@ -98,9 +97,21 @@ export default function CreateQuoter({
       }
       showToast(true, "Cotización guardada correctamente");
       reset();
+      setDiscount(0);
+      setProductQuoters([
+        {
+          amount: 0,
+          price: 0,
+          isFinished: false,
+          extras: [],
+          product: "",
+          productType: { description: "", price: 0 },
+        },
+      ]);
+      setCustomProducts([]);
     } catch (error) {
       console.error("Error save quoter: ", error);
-      throw error;
+      showToast(false, "Error al guardar la cotización");
     } finally {
       setIsLoading(false);
     }
@@ -112,32 +123,62 @@ export default function CreateQuoter({
       {
         amount: 0,
         price: 0,
-        category: "",
         extras: [],
         isFinished: false,
-        product: ""
+        product: "",
+        productType: { description: "", price: 0 },
       },
     ]);
   };
 
+  const handleExtrasUpdate = (index: number, extras: ProductPrice[]) => {
+    setAvailableExtras((prev) => ({
+      ...prev,
+      [index]: extras
+    }));
+  };
+
+  const handleAddCustomProduct = () => {
+    setCustomProducts([
+      ...customProducts,
+      {
+        description: "",
+        price: 0,
+        amount: 1,
+      },
+    ]);
+  };
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    const clampedValue = Math.min(Math.max(value, 0), 100);
+    setDiscount(clampedValue);
+  };
+
   return (
-    <div className="px-4 pt-6">
-      <h1 className="text-xl text-white font-semibold">Cotizador</h1>
-      <div className="flex flex-col mt-6 bg-gray-800 border-gray-700 rounded-lg px-6">
-        <h5 className="inline-flex pt-4 items-center mb-6 text-sm font-semibold text-gray-500 uppercase dark:text-white">
-          Datos de cotización
-        </h5>
-        <div className="space-y-12">
-          <form className="pb-6" onSubmit={handleSubmit(saveQuoter)}>
-            <div className="mt-10 grid gap-x-6 gap-y-8 sm:grid-cols-6">
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="artist"
-                  className="block text-sm font-medium text-gray-400"
-                >
-                  Artista (nombre y email)
-                </label>
-                <div className="mt-1">
+    <div className="px-0 sm:px-4 pt-4 sm:pt-6 pb-28 lg:pb-8">
+      <h1 className="text-xl sm:text-2xl text-gray-900 dark:text-white font-bold mb-4 sm:mb-6">Cotizador</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 sm:gap-6">
+        {/* Formulario principal */}
+        <div className="flex flex-col bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 shadow-sm">
+          <div className="space-y-4 sm:space-y-6">
+            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit(saveQuoter)}>
+            {/* Datos de Cotización */}
+            <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
+                <span className="w-1 sm:w-1.5 h-5 sm:h-6 bg-blue-500 rounded-full"></span>
+                Datos de Cotización
+              </h2>
+              
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="sm:col-span-2 lg:col-span-2">
+                  <label
+                    htmlFor="artist"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2"
+                  >
+                    Artista (nombre y email) <span className="text-red-500">*</span>
+                  </label>
                   <Controller
                     name="artist"
                     control={control}
@@ -147,21 +188,45 @@ export default function CreateQuoter({
                         {...field}
                         type="text"
                         variant="bordered"
-                        placeholder="Ingrese nombre del artista"
+                        placeholder="Ej: Juan Pérez - juan@email.com"
+                        classNames={{
+                          inputWrapper: "bg-white dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500",
+                        }}
                         isRequired
                       />
                     )}
                   />
                 </div>
+                <div>
+                  <label
+                    htmlFor="discount"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2"
+                  >
+                    Descuento (%)
+                  </label>
+                  <Input
+                    type="number"
+                    variant="bordered"
+                    placeholder="0"
+                    classNames={{
+                      inputWrapper: "bg-white dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500",
+                    }}
+                    value={discount.toString()}
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    onChange={handleDiscountChange}
+                  />
+                </div>
               </div>
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="dateLimit"
-                  className="block text-sm font-medium text-gray-400"
-                >
-                  Fecha Entrega (opcional)
-                </label>
-                <div className="mt-1">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 mt-3 sm:mt-4">
+                <div>
+                  <label
+                    htmlFor="dateLimit"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2"
+                  >
+                    Fecha Entrega (opcional)
+                  </label>
                   <Controller
                     name="dateLimit"
                     control={control}
@@ -170,6 +235,9 @@ export default function CreateQuoter({
                       <DatePicker
                         variant="bordered"
                         label="Fecha de entrega"
+                        classNames={{
+                          inputWrapper: "bg-white dark:bg-gray-900/50 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500",
+                        }}
                         onChange={(date) => {
                           field.onChange(date);
                         }}
@@ -178,59 +246,130 @@ export default function CreateQuoter({
                   />
                 </div>
               </div>
-              <hr className="border-t border-gray-500 mt-4 w-full col-span-6" />
-              <div className="col-span-6 sm:col-span-6">
-                <label
-                  htmlFor="dateLimit"
-                  className="text-md font-medium text-white flex items-center gap-2"
-                >
-                  Productos
-                  <button
+            </div>
+
+            {/* Productos */}
+            <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-4 sm:p-5 border border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span className="w-1 sm:w-1.5 h-5 sm:h-6 bg-green-500 rounded-full"></span>
+                  Productos ({productQuoters.length})
+                </h2>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
                     type="button"
-                    className="inline-flex items-center justify-center p-1.5 rounded-lg bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                    onClick={handleAddProduct}
+                    color="secondary"
+                    variant="shadow"
+                    size="sm"
+                    onPress={handleAddCustomProduct}
+                    startContent={<SparklesIcon className="h-4 w-4" />}
+                    className="w-full sm:w-auto text-sm"
                   >
-                    <PlusIcon className="h-4 w-4 text-white" />
-                  </button>
-                  <TotalAmount totalCalculate={totalCalculate} />
-                </label>
+                    <span className="sm:hidden">Personalizado</span>
+                    <span className="hidden sm:inline">Producto Personalizado</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    color="success"
+                    variant="shadow"
+                    size="sm"
+                    onPress={handleAddProduct}
+                    startContent={<PlusIcon className="h-4 w-4" />}
+                    className="w-full sm:w-auto text-sm"
+                  >
+                    <span className="sm:hidden">Catálogo</span>
+                    <span className="hidden sm:inline">Producto del Catálogo</span>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
                 {productQuoters.map((item, index) => (
                   <div key={index}>
                     <ProductForm
                       index={index}
-                      categories={categories}
-                      filterProducts={filterProducts}
+                      products={products}
                       productQuoters={productQuoters}
                       setProductQuoters={setProductQuoters}
-                      setFilterProducts={setFilterProducts}
+                      onExtrasUpdate={handleExtrasUpdate}
                     />
                     {productQuoters[index].extras.length > 0 && (
                       <ExtraProducts
                         index={index}
-                        extraProducts={{[index]: productQuoters[index].extras as ProductExtra[]}}
+                        availableExtras={availableExtras[index] || []}
                         productQuoters={productQuoters}
                         setProductQuoters={setProductQuoters}
-                        getProduct={getProduct}
                       />
                     )}
                   </div>
                 ))}
+
+                {/* Custom Products */}
+                {customProducts.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-md font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                      <SparklesIcon className="h-5 w-5" />
+                      Productos Personalizados ({customProducts.length})
+                    </h3>
+                    {customProducts.map((_, index) => (
+                      <CustomProductForm
+                        key={index}
+                        index={index}
+                        customProducts={customProducts}
+                        setCustomProducts={setCustomProducts}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              <hr className="border-t border-gray-500 mt-4 w-full col-span-6" />
-              <div className="col-span-6 sm:col-span-6">
-                <TotalAmount totalCalculate={totalCalculate} isMobile />
-                <Button
-                  type="submit"
-                  color="success"
-                  className="float-right"
-                  isLoading={isLoading}
-                >
-                  Guardar cotización
-                </Button>
+            </div>
+
+            {/* Acciones */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+                <span className="text-red-500">*</span> Campos obligatorios
               </div>
+              <Button
+                type="submit"
+                color="success"
+                size="lg"
+                variant="shadow"
+                isLoading={isLoading}
+                className="font-semibold w-full sm:w-auto order-1 sm:order-2"
+              >
+                Guardar Cotización
+              </Button>
             </div>
           </form>
         </div>
+      </div>
+
+      {/* Panel de Total - Sticky (Desktop) */}
+      <div className="hidden lg:block">
+        <TotalAmount subtotal={subtotal} discount={discount} totalCalculate={totalCalculate} />
+      </div>
+      
+      {/* Total móvil - Fixed bottom */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 z-20 shadow-lg dark:shadow-none">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+              <span className="text-gray-900 dark:text-white font-medium">{formatCurrency(subtotal)}</span>
+            </div>
+            {discount > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Desc. ({discount}%):</span>
+                <span className="text-red-500 dark:text-red-400">-{formatCurrency((subtotal * discount) / 100)}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex-shrink-0 text-right">
+            <span className="block text-xs text-gray-500 dark:text-gray-400">Total</span>
+            <span className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalCalculate)}</span>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

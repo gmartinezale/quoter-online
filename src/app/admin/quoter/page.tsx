@@ -1,28 +1,28 @@
 import CreateQuoter from "@/components/template/Quoter/Create";
-import { Category } from "@/entities/Category";
-import { CategoryRepository } from "@/data/categories.repository";
+import { ProductRepository } from "@/data/products.repository";
+import { Product } from "@/entities/Product";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import SkeletonLoading from "@/components/layouts/loading";
+import SkeletonQuoterCreate from "@/components/skeletons/SkeletonQuoterCreate";
 
-const getCategories = async () => {
+const getProducts = async () => {
   try {
     const cookiesStore = await cookies();
-    const token = cookiesStore.get("next-auth.session-token")?.value;
-    const repository = CategoryRepository.instance(token);
-    const { categories } = await repository.getCategories();
-    return categories;
+    const token = cookiesStore.get("session")?.value;
+    const repository = ProductRepository.instance(token);
+    const { products } = await repository.getProducts();
+    return products;
   } catch (error) {
-    console.error("Error get categories: ", error);
+    console.error("Error get products: ", error);
     throw error;
   }
 };
 
-export default async function CategoryPage() {
-  const categories: Category[] = await getCategories();
+export default async function QuoterPage() {
+  const products: Product[] = await getProducts();
   return (
-    <Suspense fallback={<SkeletonLoading />}>
-      <CreateQuoter initialCategories={categories} />
+    <Suspense fallback={<SkeletonQuoterCreate />}>
+      <CreateQuoter initialProducts={products} />
     </Suspense>
   );
 }

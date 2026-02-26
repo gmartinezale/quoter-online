@@ -6,13 +6,31 @@ export interface IProductPrice {
   price: number;
 }
 
+export interface IProductType {
+  description: string;
+  price?: number;
+  finishes?: IProductPrice[];
+  extras?: IProductPrice[];
+}
+
 // Subdocument schemas
 const ProductPriceSchema = new Schema<IProductPrice>(
   {
     description: { type: String, required: true },
-    price: { type: Number, required: true, min: 0 },
+    price: { type: Number},
+    
   },
   { _id: false },
 );
 
-export { ProductPriceSchema };
+const ProductTypeSchema = new Schema<IProductType>(
+  {
+    description: { type: String, required: true },
+    price: { type: Number },
+    finishes: { type: [ProductPriceSchema], default: [] },
+    extras: { type: [ProductPriceSchema], default: [] },
+  },
+  { _id: false },
+);
+
+export { ProductPriceSchema, ProductTypeSchema };

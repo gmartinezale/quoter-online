@@ -1,13 +1,28 @@
 import { connectDB } from "@/lib/mongo";
 import Product from "@/models/product";
+import { getSession } from "@/lib/dal";
+import { 
+  isValidObjectId, 
+  invalidIdResponse, 
+  unauthorizedResponse,
+  safeErrorLog 
+} from "@/lib/security";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await connectDB();
+    // Verificar autenticación
+    const session = await getSession();
+    if (!session) return unauthorizedResponse();
+
     const { id: CategoryId } = await params;
+    
+    // Validar ObjectId
+    if (!isValidObjectId(CategoryId)) return invalidIdResponse();
+
+    await connectDB();
 
     const seacrhObject: any = {
       active: true,
@@ -18,7 +33,7 @@ export async function GET(
       .lean();
     return Response.json({ success: true, products });
   } catch (error) {
-    console.error("Error fetching products: ", error);
+    safeErrorLog("Error fetching products", error);
     return new Response(JSON.stringify({ success: false }), {
       status: 500,
     });

@@ -1,6 +1,12 @@
 import Product from "@/models/product";
 import { connectDB } from "@/lib/mongo";
 import { z } from "zod";
+import { getSession } from "@/lib/dal";
+import { 
+  unauthorizedResponse, 
+  validateOrigin, 
+  safeErrorLog 
+} from "@/lib/security";
 
 // Zod schemas for validation
 const ProductPriceSchema = z.object({
@@ -9,12 +15,30 @@ const ProductPriceSchema = z.object({
   price: z.number().min(0, "El precio debe ser mayor o igual a 0"),
 });
 
+const ProductTypeSchema = z.object({
+  _id: z.string().optional(),
+  description: z.string().min(1, "La descripción del tipo es requerida"),
+  price: z.number().optional(),
+  finishes: z.array(ProductPriceSchema).default([]).optional(),
+  extras: z.array(ProductPriceSchema).default([]).optional(),
+}).refine(
+  (data) => {
+    // If no finishes, price is required
+    if (!data.finishes || data.finishes.length === 0) {
+      return data.price !== undefined && data.price !== null;
+    }
+    return true;
+  },
+  {
+    message: "El precio es requerido si no hay acabados definidos",
+    path: ["price"],
+  }
+);
+
 const CreateProductSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  price: z.number().min(0, "El precio base debe ser mayor o igual a 0"),
-  types: z.array(ProductPriceSchema).default([]),
-  finishes: z.array(ProductPriceSchema).default([]),
-  extras: z.array(ProductPriceSchema).default([]),
+  types: z.array(ProductTypeSchema).min(1, "Debe agregar al menos un tipo"),
+  extras: z.array(ProductPriceSchema).default([]).optional(),
   stock: z.number().min(0, "El stock debe ser mayor o igual a 0").optional(),
   minPurchase: z.number().min(1, "La compra mínima debe ser mayor o igual a 1").optional(),
 });
@@ -25,6 +49,10 @@ const UpdateProductSchema = CreateProductSchema.extend({
 
 export async function GET(request: Request) {
   try {
+    // Verificar autenticación
+    const session = await getSession();
+    if (!session) return unauthorizedResponse();
+
     await connectDB();
     const query = new URL(request.url).searchParams;
     const searchObject: any = {
@@ -36,7 +64,7 @@ export async function GET(request: Request) {
       
     return Response.json({ success: true, products });
   } catch (error) {
-    console.error("Error fetching products: ", error);
+    safeErrorLog("Error fetching products", error);
     return new Response(JSON.stringify({ success: false, message: "Error al obtener productos" }), {
       status: 500,
     });
@@ -45,6 +73,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Verificar autenticación
+    const session = await getSession();
+    if (!session) return unauthorizedResponse();
+
+    // Validar origen de la solicitud (CSRF protection)
+    if (!await validateOrigin(request)) {
+      return new Response(JSON.stringify({ success: false, message: "Origen no válido" }), { status: 403 });
+    }
+
     await connectDB();
     const body = await request.json();
     
@@ -62,13 +99,11 @@ export async function POST(request: Request) {
       );
     }
     
-    const { name, price, types, finishes, extras, stock, minPurchase } = validationResult.data;
+    const { name, types, extras, stock, minPurchase } = validationResult.data;
     
     const product = await Product.create({
       name,
-      price,
       types,
-      finishes,
       extras,
       stock,
       minPurchase,
@@ -83,7 +118,7 @@ export async function POST(request: Request) {
     
     return Response.json({ success: true, product });
   } catch (error) {
-    console.error("Error creating product: ", error);
+    safeErrorLog("Error creating product", error);
     return new Response(JSON.stringify({ success: false, message: "Error al crear el producto" }), {
       status: 500,
     });
@@ -92,6 +127,15 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    // Verificar autenticación
+    const session = await getSession();
+    if (!session) return unauthorizedResponse();
+
+    // Validar origen de la solicitud (CSRF protection)
+    if (!await validateOrigin(request)) {
+      return new Response(JSON.stringify({ success: false, message: "Origen no válido" }), { status: 403 });
+    }
+
     await connectDB();
     const body = await request.json();
     
@@ -109,15 +153,13 @@ export async function PUT(request: Request) {
       );
     }
     
-    const { id, name, price, types, finishes, extras, stock, minPurchase } = validationResult.data;
+    const { id, name, types, extras, stock, minPurchase } = validationResult.data;
     
     const product = await Product.findOneAndUpdate(
       { _id: id },
       { 
         name, 
-        price, 
-        types, 
-        finishes, 
+        types,
         extras, 
         stock, 
         minPurchase 
@@ -133,7 +175,7 @@ export async function PUT(request: Request) {
     
     return Response.json({ success: true, product });
   } catch (error) {
-    console.error("Error updating product: ", error);
+    safeErrorLog("Error updating product", error);
     return new Response(JSON.stringify({ success: false, message: "Error al actualizar el producto" }), {
       status: 500,
     });

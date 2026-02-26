@@ -2,7 +2,7 @@ import ProductTable from "@/components/template/Product/ProductTable";
 import { Product } from "@/entities/Product";
 import { ProductRepository } from "@/data/products.repository";
 import { cookies } from "next/headers";
-import SkeletonLoading from "@/components/layouts/loading";
+import SkeletonProductTable from "@/components/skeletons/SkeletonProductTable";
 import { Suspense } from "react";
 
 const getProducts = async () => {
@@ -21,7 +21,7 @@ const getProducts = async () => {
 export default async function ProductPage() {
   const products: Product[] = await getProducts();
   return (
-    <Suspense fallback={<SkeletonLoading />}>
+    <Suspense fallback={<SkeletonProductTable />}>
       <ProductTable initialProducts={products} />
     </Suspense>
   );

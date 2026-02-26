@@ -7,7 +7,15 @@ export type ExtraProductQuoter = {
   amount: number;
 };
 
+// Custom product not from the product catalog
+export type CustomProduct = {
+  description: string;
+  price: number;
+  amount: number;
+};
+
 export type ProductPrice = {
+  _id?: string;
   description: string;
   price: number;
 };
@@ -15,12 +23,12 @@ export type ProductPrice = {
 // Product item in quotation with selected type and finish
 export type ProductsQuoter = {
   product: string | ProductDoc; // Reference to the product
-  productType?: ProductPrice; // ID of the selected type from product.types
-  productFinish?: ProductPrice; // ID of the selected finish from product.finishes
+  productType: ProductPrice; // Selected type from product.types (required)
+  productFinish?: ProductPrice; // Optional: selected finish from productType.finishes
   amount: number;
-  price: number; // Calculated price (base + type + finish)
+  price: number; // Calculated price (type.price or finish.price + selected extras)
   isFinished: boolean;
-  extras: ExtraProductQuoter[]; // Selected extras from product.extras
+  extras: ExtraProductQuoter[]; // Selected extras (from type.extras + product.extras)
 };
 
 export type Quoter = {
@@ -29,9 +37,11 @@ export type Quoter = {
   artist: string;
   active: boolean;
   products: ProductsQuoter[];
+  customProducts: CustomProduct[]; // Products not from catalog
   dateLimit: Date;
   fileSended: boolean;
   status: string;
+  discount: number; // Percentage discount (0-100)
   createdAt: Date;
   updatedAt: Date;
 };

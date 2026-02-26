@@ -22,7 +22,7 @@ const UserSchema = new Schema<IUser>(
 UserSchema.pre<IUser>("save", async function (next) {
   const thisUser = this as IUser;
   if (!thisUser.isModified("password") || !thisUser.password) return next();
-  const salt = await bcrypt.genSalt(5);
+  const salt = await bcrypt.genSalt(12); // Incrementado de 5 a 12 para mayor seguridad
   const hash = await bcrypt.hash(thisUser.password, salt);
   thisUser.password = hash;
   next();
