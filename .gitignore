@@ -72,5 +72,5 @@ next-env.d.ts
 .turbo
 
 # Skills/documentation (personal reference)
-.github/skills/
+.github/*
 .agents/*
