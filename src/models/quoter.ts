@@ -29,6 +29,9 @@ interface IProductsQuoter {
 }
 
 interface IQuoter extends Document {
+  quoterNumber: number;
+  orderNumber?: number;
+  invoiceNumber?: string;
   totalAmount: number;
   artist: string;
   active: boolean;
@@ -38,10 +41,14 @@ interface IQuoter extends Document {
   fileSended: boolean;
   discount: number; // Percentage discount (0-100)
   status: string;
+  statusChanges: { status: string; date: Date }[];
 }
 
 const QuoterSchema = new Schema<IQuoter>(
   {
+    quoterNumber: { type: Number, unique: true, required: true },
+    orderNumber: { type: Number, unique: true, sparse: true },
+    invoiceNumber: { type: String },
     totalAmount: Number,
     artist: String,
     active: Boolean,
@@ -78,8 +85,15 @@ const QuoterSchema = new Schema<IQuoter>(
     status: {
       type: String,
       default: "PENDIENTE",
-      enum: ["PENDIENTE", "EN PROCESO", "RECHAZADO", "FINALIZADO"],
+      enum: ["PENDIENTE", "PAGADO", "COMPLETA", "ANULADO"],
     },
+    statusChanges: [
+      {
+        _id: false,
+        status: { type: String, required: true },
+        date: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true },
 );

@@ -43,40 +43,14 @@ const naviItems = [
   },
 ];
 
-export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobileOpen }: ISidebarProps) {
-  const pathname = usePathname();
+interface NavContentProps {
+  pathname: string;
+  toggleOpen: boolean;
+  mobileOpen: boolean;
+}
 
-  // Close mobile sidebar on route change
-  useEffect(() => {
-    if (mobileOpen && setMobileOpen) {
-      setMobileOpen(false);
-    }
-  }, [pathname]);
-
-  // Close mobile sidebar on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && mobileOpen && setMobileOpen) {
-        setMobileOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [mobileOpen, setMobileOpen]);
-
-  // Prevent body scroll when mobile sidebar is open
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
-
-  const NavContent = () => (
+function NavContent({ pathname, toggleOpen, mobileOpen }: NavContentProps) {
+  return (
     <nav className="flex-1 px-3 space-y-1">
       <ul className="pb-2 space-y-1">
         {naviItems.map((item, index) => {
@@ -88,7 +62,7 @@ export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobi
             return (
               <li key={index}>
                 {toggleOpen || mobileOpen ? (
-                  <Accordion 
+                  <Accordion
                     className="px-0"
                     defaultExpandedKeys={isChildActive ? [index.toString()] : []}
                   >
@@ -149,7 +123,7 @@ export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobi
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                 }`}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <item.icon className="w-5 h-5 shrink-0" />
                 {(toggleOpen || mobileOpen) && (
                   <span className="text-sm font-medium">
                     {item.name}
@@ -162,6 +136,40 @@ export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobi
       </ul>
     </nav>
   );
+}
+
+export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobileOpen }: ISidebarProps) {
+  const pathname = usePathname();
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    if (mobileOpen && setMobileOpen) {
+      setMobileOpen(false);
+    }
+  }, [pathname]);
+
+  // Close mobile sidebar on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileOpen && setMobileOpen) {
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileOpen, setMobileOpen]);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   return (
     <>
@@ -184,7 +192,7 @@ export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobi
         {/* Mobile header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
               <span className="text-white font-bold text-sm">Q</span>
             </div>
             <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -204,21 +212,21 @@ export default function Sidebar({ toggleOpen = true, mobileOpen = false, setMobi
         
         {/* Mobile nav content */}
         <div className="flex flex-col flex-1 pt-4 pb-4 overflow-y-auto">
-          <NavContent />
+          <NavContent pathname={pathname} toggleOpen={toggleOpen} mobileOpen={mobileOpen} />
         </div>
       </aside>
 
       {/* Desktop sidebar */}
       <aside
         id="sidebar"
-        className={`fixed top-0 left-0 z-20 flex-col flex-shrink-0 hidden ${
+        className={`fixed top-0 left-0 z-20 flex-col shrink-0 hidden ${
           toggleOpen ? "w-64" : "w-16"
         } h-full pt-16 font-normal duration-200 lg:flex transition-all border-r border-gray-200 dark:border-gray-800`}
         aria-label="Sidebar"
       >
         <div className="relative flex flex-col flex-1 min-h-0 pt-0 bg-white dark:bg-[#232323] transition-all duration-200 ease-in-out">
           <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
-            <NavContent />
+            <NavContent pathname={pathname} toggleOpen={toggleOpen} mobileOpen={mobileOpen} />
           </div>
         </div>
       </aside>

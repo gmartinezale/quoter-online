@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 // 1. Specify protected and public routes
-const protectedRoutes = ["/admin"];
+const protectedRoutes = ["/admin", "/view"];
 const publicRoutes = ["/login", "/"];
 
 async function verifySession(cookie: string | undefined) {

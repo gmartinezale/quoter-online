@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "react";
 import { ToastContext } from "@/components/elements/Toast/ToastComponent";
 import { Controller, useForm } from "react-hook-form";
 import { Button, Input, DatePicker, Spinner } from "@heroui/react";
-import { PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { QuoterRepository } from "@/data/quoter.repository";
 import { ProductForm } from "./components/ProductForm";
 import { ExtraProducts } from "./components/ExtraProducts";
@@ -38,6 +38,7 @@ export default function CreateQuoter({
   const [subtotal, setSubtotal] = useState<number>(0);
   const [totalCalculate, setTotalCalculate] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [savedQuoterNumber, setSavedQuoterNumber] = useState<number | null>(null);
   const [productQuoters, setProductQuoters] = useState<ProductsQuoter[]>([
     {
       amount: 0,
@@ -90,12 +91,13 @@ export default function CreateQuoter({
       payload.customProducts = customProducts;
       payload.discount = discount;
       const repository = QuoterRepository.instance();
-      const { success } = await repository.saveQuoter(payload);
+      const { success, quoterNumber } = await repository.saveQuoter(payload);
       if (!success) {
         showToast(false, "Ocurrió un error al guardar la cotización");
         return;
       }
-      showToast(true, "Cotización guardada correctamente");
+      showToast(true, `Cotización #${quoterNumber} guardada correctamente`);
+      setSavedQuoterNumber(quoterNumber);
       reset();
       setDiscount(0);
       setProductQuoters([
@@ -329,16 +331,33 @@ export default function CreateQuoter({
               <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
                 <span className="text-red-500">*</span> Campos obligatorios
               </div>
-              <Button
-                type="submit"
-                color="success"
-                size="lg"
-                variant="shadow"
-                isLoading={isLoading}
-                className="font-semibold w-full sm:w-auto order-1 sm:order-2"
-              >
-                Guardar Cotización
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto order-1 sm:order-2">
+                {savedQuoterNumber && (
+                  <Button
+                    as="a"
+                    href={`/view/cotizacion-${savedQuoterNumber}`}
+                    target="_blank"
+                    color="primary"
+                    size="lg"
+                    variant="shadow"
+                    startContent={<ArrowDownTrayIcon className="h-5 w-5" />}
+                    className="font-semibold w-full sm:w-auto"
+                  >
+                    Descargar Cotización #{savedQuoterNumber}
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  color="success"
+                  size="lg"
+                  variant="shadow"
+                  isLoading={isLoading}
+                  className="font-semibold w-full sm:w-auto"
+                  onPress={() => setSavedQuoterNumber(null)}
+                >
+                  {savedQuoterNumber ? "Nueva Cotización" : "Guardar Cotización"}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

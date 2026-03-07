@@ -67,7 +67,7 @@ export default function Header({ setToggleOpen, toggleOpen, setMobileOpen, mobil
             </Button>
 
             <a href="/admin/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
                 <span className="text-white font-bold text-sm">Q</span>
               </div>
               <span className="text-xl font-bold whitespace-nowrap text-gray-900 dark:text-white hidden sm:block">

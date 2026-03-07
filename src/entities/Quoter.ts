@@ -31,8 +31,16 @@ export type ProductsQuoter = {
   extras: ExtraProductQuoter[]; // Selected extras (from type.extras + product.extras)
 };
 
+export type StatusChange = {
+  status: string;
+  date: Date;
+};
+
 export type Quoter = {
   _id?: string;
+  quoterNumber: number;
+  orderNumber?: number;
+  invoiceNumber?: string;
   totalAmount: number;
   artist: string;
   active: boolean;
@@ -42,6 +50,7 @@ export type Quoter = {
   fileSended: boolean;
   status: string;
   discount: number; // Percentage discount (0-100)
+  statusChanges: StatusChange[];
   createdAt: Date;
   updatedAt: Date;
 };

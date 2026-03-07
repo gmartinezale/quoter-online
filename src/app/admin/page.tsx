@@ -16,10 +16,12 @@ async function QuoterDashboardWrapper() {
       success,
       quotersPending,
       quotersProcess,
+      quotersCompleted,
     }: {
       success: boolean;
       quotersPending: Quoter[];
       quotersProcess: Quoter[];
+      quotersCompleted: Quoter[];
     } = await repository.getQuoters();
   
     if (!success) {
@@ -30,6 +32,7 @@ async function QuoterDashboardWrapper() {
       <QuoterDashboard
         quotersPending={quotersPending}
         quotersProcess={quotersProcess}
+        quotersCompleted={quotersCompleted}
       />
     );
   }
@@ -42,7 +45,6 @@ async function QuoterDashboardWrapper() {
 export default async function DashboardPage() {
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-white text-xl font-semibold">Inicio</h1>
       <Suspense fallback={<SkeletonDashboard />}>
         <QuoterDashboardWrapper />
       </Suspense>
